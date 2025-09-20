@@ -1,1 +1,0 @@
-(self.webpackChunkextension=self.webpackChunkextension||[]).push([[5253],{62099:e=>{e.exports=function(e){return{name:"Clojure REPL",contains:[{className:"meta",begin:/^([\w.-]+|\s*#_)?=>/,starts:{end:/$/,subLanguage:"clojure"}}]}}}}]);

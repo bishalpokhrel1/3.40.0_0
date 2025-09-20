@@ -1,1 +1,0 @@
-(self.webpackChunkextension=self.webpackChunkextension||[]).push([[2979],{80590:e=>{e.exports=function(e){return{name:"Plain text",aliases:["text","txt"],disableAutodetect:!0}}}}]);

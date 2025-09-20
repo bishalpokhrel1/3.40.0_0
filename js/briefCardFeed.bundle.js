@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkextension=self.webpackChunkextension||[]).push([[1803],{91909:(e,n,t)=>{t.r(n),t.d(n,{BriefCardFeed:()=>a,default:()=>c});var r=t(22155),s=t(59243),u=r.createElement,a=function(e){return u(s.V,e)};const c=a}}]);
