@@ -10,7 +10,6 @@ import {
   Trash2,
   Download,
   Upload,
-  RefreshCw,
   ExternalLink
 } from 'lucide-react'
 

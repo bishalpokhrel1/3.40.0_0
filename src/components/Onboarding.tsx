@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useAppStore } from '@/store/appStore'
 import { 
   ArrowRight, 
@@ -38,7 +38,7 @@ const Onboarding: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     interests: [] as string[],
-    location: null as { lat: number; lon: number; city: string } | null,
+    location: undefined as { lat: number; lon: number; city: string } | undefined,
     weatherEnabled: true,
     feedEnabled: true,
     tasksEnabled: true
@@ -273,7 +273,7 @@ const Onboarding: React.FC = () => {
     }
 
     const handleSkipLocation = () => {
-      setFormData({ ...formData, location: null, weatherEnabled: false })
+      setFormData({ ...formData, location: undefined, weatherEnabled: false })
     }
 
     return (

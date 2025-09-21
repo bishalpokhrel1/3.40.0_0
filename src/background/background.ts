@@ -1,46 +1,97 @@
-// Background service worker for Manage Chrome Extension
+import { FeedItem, Article, AIWindow } from '../types/feedItem';
 
-import { FeedItem } from '@/store/appStore'
+// Background service worker for Manage Chrome Extension
+console.log('Background script loaded')
+
+// Add Chrome types reference
+/// <reference types="chrome"/>
 
 // Install event
 chrome.runtime.onInstalled.addListener(() => {
   console.log('Manage extension installed')
   
-  // Set up periodic feed updates
-  chrome.alarms.create('updateFeeds', { 
-    delayInMinutes: 1, 
-    periodInMinutes: 30 
-  })
-  
-  // Set up side panel
-  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
-})
-
-// Handle alarms
-chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === 'updateFeeds') {
-    updateFeeds()
+  // Set up side panel if available
+  if ('sidePanel' in chrome) {
+    chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
   }
 })
 
-// Handle messages from content scripts and popup
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  switch (request.action) {
-    case 'fetchFeeds':
-      handleFetchFeeds(request.interests).then(sendResponse)
-      return true // Keep message channel open for async response
-      
-    case 'getTaskSuggestions':
-      handleGetTaskSuggestions(request.task).then(sendResponse)
-      return true
-      
-    case 'summarizePage':
-      handleSummarizePage(request.content).then(sendResponse)
-      return true
-      
-    case 'chatWithAI':
-      handleChatWithAI(request.message, request.context).then(sendResponse)
-      return true
+// Message types
+interface MessageRequest {
+  action: 'fetchFeeds' | 'getTaskSuggestions' | 'summarizePage' | 'chatWithAI';
+  interests?: string[];
+  task?: string;
+  content?: string;
+  message?: string;
+  context?: string;
+}
+
+interface MessageResponse {
+  success: boolean;
+  message?: string;
+  items?: FeedItem[];
+  suggestions?: string[];
+  summary?: string;
+  response?: string;
+  error?: string;
+}
+
+// Message handling with error handling
+chrome.runtime.onMessage.addListener((
+  request: MessageRequest,
+  _sender: chrome.runtime.MessageSender,
+  sendResponse: (response: MessageResponse) => void
+) => {
+  console.log('Received message:', request)
+
+  try {
+    switch (request.action) {
+      case 'fetchFeeds':
+        if (!request.interests) {
+          throw new Error('No interests provided for feed fetch')
+        }
+        handleFetchFeeds(request.interests)
+          .then(response => sendResponse({ success: true, ...response }))
+          .catch(error => sendResponse({ success: false, error: error.message }))
+        return true
+
+      case 'getTaskSuggestions':
+        if (!request.task) {
+          throw new Error('No task provided for suggestions')
+        }
+        handleGetTaskSuggestions(request.task)
+          .then(response => sendResponse({ success: true, ...response }))
+          .catch(error => sendResponse({ success: false, error: error.message }))
+        return true
+
+      case 'summarizePage':
+        if (!request.content) {
+          throw new Error('No content provided for summarization')
+        }
+        handleSummarizePage(request.content)
+          .then(response => sendResponse({ success: true, ...response }))
+          .catch(error => sendResponse({ success: false, error: error.message }))
+        return true
+
+      case 'chatWithAI':
+        if (!request.message) {
+          throw new Error('No message provided for AI chat')
+        }
+        handleChatWithAI(request.message, request.context)
+          .then(response => sendResponse({ success: true, ...response }))
+          .catch(error => sendResponse({ success: false, error: error.message }))
+        return true
+
+      default:
+        throw new Error(`Unknown action: ${(request as any).action}`)
+    }
+  } catch (error) {
+    console.error('Error handling message:', error)
+    sendResponse({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error'
+    })
+    return true
   }
 })
 
@@ -79,6 +130,10 @@ async function handleFetchFeeds(interests: string[]): Promise<{ items: FeedItem[
 
 // Fetch feed items from various sources
 async function fetchFeedItems(interests: string[]): Promise<FeedItem[]> {
+  if (!interests || interests.length === 0) {
+    throw new Error('No interests provided for feed fetch')
+  }
+
   const items: FeedItem[] = []
   
   try {
@@ -86,43 +141,64 @@ async function fetchFeedItems(interests: string[]): Promise<FeedItem[]> {
     // For demo, we'll return mock data with AI processing
     const mockArticles = await getMockArticles(interests)
     
+    if (!mockArticles || mockArticles.length === 0) {
+      throw new Error('No articles found for the given interests')
+    }
+
     // Process each article with AI
-    for (const article of mockArticles) {
+    const articleProcessingPromises = mockArticles.map(async article => {
       try {
-        const processedItem = await processArticleWithAI(article, interests)
-        items.push(processedItem)
+        return await processArticleWithAI(article, interests)
       } catch (error) {
         console.error('Failed to process article:', error)
         // Add without AI processing as fallback
-        items.push({
+        return {
           id: crypto.randomUUID(),
           title: article.title,
           description: article.description,
           url: article.url,
           source: article.source,
           publishedAt: article.publishedAt,
-          imageUrl: article.imageUrl
-        })
+          imageUrl: article.imageUrl,
+          relevanceScore: 50, // Default score
+          tags: interests // Use interests as basic tags
+        }
       }
+    })
+
+    // Wait for all articles to be processed
+    const processedItems = await Promise.allSettled(articleProcessingPromises)
+    
+    // Filter out failed items and add successful ones
+    processedItems.forEach(result => {
+      if (result.status === 'fulfilled') {
+        items.push(result.value)
+      }
+    })
+
+    if (items.length === 0) {
+      throw new Error('Failed to process any articles')
     }
+
   } catch (error) {
     console.error('Failed to fetch feed items:', error)
+    throw new Error('Failed to fetch feed items: ' + (error instanceof Error ? error.message : 'Unknown error'))
   }
   
   return items.sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0))
 }
 
 // Process article with AI for relevance and summary
-async function processArticleWithAI(article: any, interests: string[]): Promise<FeedItem> {
+async function processArticleWithAI(article: Article, interests: string[]): Promise<FeedItem> {
   let aiSummary = ''
   let relevanceScore = 50
   let tags: string[] = []
   
   try {
     // Try to use Chrome's built-in AI
-    // @ts-ignore - Chrome AI APIs are experimental
-    if (typeof window !== 'undefined' && window.ai?.languageModel) {
-      const session = await window.ai.languageModel.create({
+    const win = window as unknown as AIWindow
+    if (typeof window !== 'undefined' && win.ai?.languageModel) {
+      const session = await win.ai.languageModel.create({
         systemPrompt: `You are a content analyzer. Rate relevance (0-100) and provide a 1-2 sentence summary.
         User interests: ${interests.join(', ')}`
       })
@@ -258,9 +334,9 @@ async function getMockArticles(interests: string[]) {
 async function handleGetTaskSuggestions(task: string): Promise<{ suggestions: string[] }> {
   try {
     // Try to use Chrome's built-in AI
-    // @ts-ignore - Chrome AI APIs are experimental
-    if (typeof window !== 'undefined' && window.ai?.languageModel) {
-      const session = await window.ai.languageModel.create({
+    const win = window as unknown as AIWindow
+    if (typeof window !== 'undefined' && win.ai?.languageModel) {
+      const session = await win.ai.languageModel.create({
         systemPrompt: 'You are a productivity assistant. Break down tasks into actionable steps.'
       })
       
@@ -301,9 +377,9 @@ async function handleGetTaskSuggestions(task: string): Promise<{ suggestions: st
 async function handleSummarizePage(content: string): Promise<{ summary: string }> {
   try {
     // Try to use Chrome's built-in Summarizer API
-    // @ts-ignore - Chrome AI APIs are experimental
-    if (typeof window !== 'undefined' && window.ai?.summarizer) {
-      const summarizer = await window.ai.summarizer.create()
+    const win = window as unknown as AIWindow
+    if (typeof window !== 'undefined' && win.ai?.summarizer) {
+      const summarizer = await win.ai.summarizer.create()
       const summary = await summarizer.summarize(content)
       return { summary }
     } else {
@@ -322,9 +398,9 @@ async function handleSummarizePage(content: string): Promise<{ summary: string }
 async function handleChatWithAI(message: string, context?: string): Promise<{ response: string }> {
   try {
     // Try to use Chrome's built-in AI
-    // @ts-ignore - Chrome AI APIs are experimental
-    if (typeof window !== 'undefined' && window.ai?.languageModel) {
-      const session = await window.ai.languageModel.create({
+    const win = window as unknown as AIWindow
+    if (typeof window !== 'undefined' && win.ai?.languageModel) {
+      const session = await win.ai.languageModel.create({
         systemPrompt: `You are a helpful assistant. ${context ? `Context: ${context}` : ''}`
       })
       
@@ -346,12 +422,13 @@ async function handleChatWithAI(message: string, context?: string): Promise<{ re
   }
 }
 
-// Export for testing
+// Export used functions
 export {
   updateFeeds,
   fetchFeedItems,
   processArticleWithAI,
   handleGetTaskSuggestions,
   handleSummarizePage,
-  handleChatWithAI
+  handleChatWithAI,
+  getMockArticles
 }

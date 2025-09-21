@@ -2,7 +2,15 @@
 // Handles page content extraction and communication with the side panel
 
 // Listen for messages from the side panel
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+interface ContentScriptRequest {
+  action: 'getPageContent';
+}
+
+chrome.runtime.onMessage.addListener((
+  request: ContentScriptRequest,
+  _sender: chrome.runtime.MessageSender,
+  sendResponse: (response: { content: string }) => void
+) => {
   if (request.action === 'getPageContent') {
     const content = extractPageContent()
     sendResponse({ content })
@@ -37,7 +45,7 @@ function extractPageContent(): string {
     for (const selector of contentSelectors) {
       const element = document.querySelector(selector)
       if (element) {
-        content = element.textContent || element.innerText || ''
+        content = element.textContent || (element as HTMLElement).innerText || ''
         break
       }
     }

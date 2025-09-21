@@ -5,11 +5,8 @@ import {
   Plus, 
   Check, 
   Trash2, 
-  Calendar, 
-  AlertCircle, 
-  Sparkles,
-  ChevronDown,
-  ChevronUp
+  Calendar,
+  Sparkles
 } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -18,7 +15,6 @@ const TaskPanel: React.FC = () => {
     tasks, 
     userPreferences,
     addTask, 
-    updateTask, 
     deleteTask, 
     toggleTask 
   } = useAppStore()

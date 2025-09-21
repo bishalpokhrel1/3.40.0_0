@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { AIWindow } from '@/types/feedItem'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -38,9 +39,9 @@ export const useSidePanelStore = create<SidePanelState>((set, get) => ({
         let summary = ''
         
         try {
-          // @ts-ignore - Chrome AI APIs are experimental
-          if (window.ai && window.ai.summarizer) {
-            const summarizer = await window.ai.summarizer.create()
+          const win = window as unknown as AIWindow
+          if (win.ai?.summarizer) {
+            const summarizer = await win.ai.summarizer.create()
             summary = await summarizer.summarize(response.content)
           } else {
             // Fallback to simple extraction
@@ -82,9 +83,9 @@ export const useSidePanelStore = create<SidePanelState>((set, get) => ({
       
       try {
         // Try to use Chrome's built-in Prompt API
-        // @ts-ignore - Chrome AI APIs are experimental
-        if (window.ai && window.ai.languageModel) {
-          const session = await window.ai.languageModel.create({
+        const win = window as unknown as AIWindow
+        if (win.ai?.languageModel) {
+          const session = await win.ai.languageModel.create({
             systemPrompt: `You are a helpful assistant that can answer questions about web pages. 
             The current page summary is: ${get().currentSummary || 'No summary available'}`
           })
