@@ -19,7 +19,7 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
         if (!request.task) {
           throw new Error("No task provided for suggestions");
         }
-        handleGetTaskSuggestions(request.task).then((response) => sendResponse({ success: true, ...response })).catch((error) => sendResponse({ success: false, error: error.message }));
+        handleGetTaskSuggestions(request.task).then(({ suggestions }) => sendResponse({ success: true, suggestions })).catch((error) => sendResponse({ success: false, error: error.message }));
         return true;
       case "summarizePage":
         if (!request.content) {

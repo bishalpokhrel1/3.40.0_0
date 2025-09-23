@@ -431,44 +431,83 @@ const Onboarding: React.FC = () => {
                     currentStep >= 3
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-800 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 via-indigo-600 to-purple-800 flex items-center justify-center p-6 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0">
+        <motion.div
+          className="absolute top-20 left-20 w-64 h-64 bg-white/5 rounded-full"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.6, 0.3]
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div
+          className="absolute bottom-20 right-20 w-48 h-48 bg-white/5 rounded-full"
+          animate={{
+            scale: [1.2, 1, 1.2],
+            opacity: [0.6, 0.3, 0.6]
+          }}
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 2
+          }}
+        />
+      </div>
+      
       <div className="w-full max-w-4xl">
         {/* Progress Bar */}
-        <div className="mb-8">
+        <div className="mb-12">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-white/70 text-sm">
+            <span className="text-white/80 text-sm font-semibold">
               Step {currentStep + 1} of {steps.length}
             </span>
-            <span className="text-white/70 text-sm">
+            <span className="text-white/80 text-sm font-semibold">
               {Math.round(((currentStep + 1) / steps.length) * 100)}%
             </span>
           </div>
-          <div className="w-full bg-white/20 rounded-full h-2">
+          <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
             <motion.div
-              className="bg-white rounded-full h-2"
+              className="bg-gradient-to-r from-white to-blue-200 rounded-full h-3 shadow-lg"
               initial={{ width: 0 }}
               animate={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
             />
           </div>
         </div>
 
         {/* Step Content */}
-        <div className="mb-8">
+        <div className="mb-12">
           <motion.div
             key={currentStep}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
           >
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-white mb-2">
+            <div className="text-center mb-12">
+              <motion.h2 
+                className="text-4xl font-bold text-white mb-4 tracking-tight"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
                 {steps[currentStep].title}
-              </h2>
-              <p className="text-white/80 text-lg">
+              </motion.h2>
+              <motion.p 
+                className="text-white/80 text-xl font-light"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
                 {steps[currentStep].subtitle}
-              </p>
+              </motion.p>
             </div>
             
             <CurrentStepComponent />
@@ -477,23 +516,27 @@ const Onboarding: React.FC = () => {
 
         {/* Navigation */}
         <div className="flex items-center justify-between">
-          <button
+          <motion.button
             onClick={prevStep}
             disabled={currentStep === 0}
-            className="flex items-center space-x-2 px-6 py-3 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+            className="flex items-center space-x-3 px-8 py-4 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-2xl transition-all duration-300"
+            whileHover={{ scale: currentStep === 0 ? 1 : 1.05, x: -4 }}
+            whileTap={{ scale: currentStep === 0 ? 1 : 0.95 }}
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-5 h-5" />
             <span>Back</span>
-          </button>
+          </motion.button>
 
-          <button
+          <motion.button
             onClick={nextStep}
             disabled={!canProceed}
-            className="flex items-center space-x-2 px-6 py-3 bg-white hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed text-purple-600 font-semibold rounded-lg transition-colors"
+            className="flex items-center space-x-3 px-8 py-4 bg-white hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed text-purple-600 font-bold rounded-2xl transition-all duration-300 shadow-lg"
+            whileHover={{ scale: !canProceed ? 1 : 1.05, x: 4 }}
+            whileTap={{ scale: !canProceed ? 1 : 0.95 }}
           >
             <span>{currentStep === steps.length - 1 ? 'Get Started' : 'Next'}</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
+            <ArrowRight className="w-5 h-5" />
+          </motion.button>
         </div>
       </div>
     </div>

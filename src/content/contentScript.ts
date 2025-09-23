@@ -1,3 +1,5 @@
+/// <reference types="chrome"/>
+
 // Content script for Manage Chrome Extension
 // Handles page content extraction and communication with the side panel
 
@@ -6,6 +8,15 @@ interface ContentScriptRequest {
   action: 'getPageContent';
 }
 
+// Send initial page content to sidepanel when loaded
+window.addEventListener('load', () => {
+  chrome.runtime.sendMessage({
+    type: 'PAGE_CONTENT',
+    text: extractPageContent()
+  });
+});
+
+// Also listen for explicit requests
 chrome.runtime.onMessage.addListener((
   request: ContentScriptRequest,
   _sender: chrome.runtime.MessageSender,

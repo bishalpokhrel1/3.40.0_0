@@ -11,6 +11,8 @@
     "build:extension": "npm run build && node scripts/build-extension.js"
   },
   "dependencies": {
+    "@mediapipe/tasks-text": "^0.10.21",
+    "@tensorflow/tfjs": "^4.22.0",
     "date-fns": "^3.3.0",
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.344.0",
@@ -27,12 +29,12 @@
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "@vitejs/plugin-react": "^4.2.1",
-    "autoprefixer": "^10.4.17",
+    "autoprefixer": "^10.4.21",
     "eslint": "^8.56.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
     "jest": "^29.7.0",
-    "postcss": "^8.4.35",
+    "postcss": "^8.5.6",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",
     "vite": "^5.1.0"

@@ -1,8 +1,14 @@
 # Manage
 
 ## 🎯 Overview
-A Chrome extension that enhances browsing experience with AI-powered features, weather animations, and productivity tools. Built with React, TypeScript, and Chrome's Manifest V3.
+A Chrome extension that enhances browsing experience with AI-powered features using Gemini API, weather animations, and productivity tools. Built with React, TypeScript, and Chrome's Manifest V3.
 
+## 🌟 Features
+- AI-powered chat and content analysis using Gemini API
+- Real-time weather animations
+- Task management and productivity tools
+- Personalized dashboard
+- Side panel for quick access
 
 ## 🏗 Architecture
 
@@ -12,11 +18,155 @@ A Chrome extension that enhances browsing experience with AI-powered features, w
    - TypeScript for type safety
    - Vite for build optimization
    - Tailwind CSS for styling
+   - Framer Motion for animations
 
 2. **State Management**
    - Zustand for global state
    - Chrome Storage API for persistence
    - Real-time state sync across components
+
+3. **AI Integration**
+   - Google's Gemini API integration
+   - Real-time content analysis
+   - Smart task suggestions
+   - Content summarization
+   - Secure API key management
+
+4. **Browser Integration**
+   - Chrome Manifest V3 compliance
+   - Service Workers for background tasks
+   - Content script for page analysis
+   - Side panel for quick access
+
+## 🚀 Getting Started
+
+### Prerequisites
+1. Node.js 16+ and npm
+2. Chrome browser
+3. Gemini API key
+
+### Environment Setup
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Create a `.env` file in the root directory:
+   ```env
+   VITE_GOOGLE_API_KEY=your_gemini_api_key
+   VITE_API_URL=https://generativelanguage.googleapis.com/v1beta
+   VITE_MODEL_NAME=gemini-pro
+   ```
+
+### Development
+1. Start the development server:
+   ```bash
+   npm run dev
+   ```
+2. Build the extension:
+   ```bash
+   npm run build:extension
+   ```
+   - Download the Gemini Nano model files
+   - Place them in `public/models/` directory
+
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+## 🤖 AI Features
+
+### On-Device AI Processing
+The extension uses Gemini Nano for local AI processing without needing a backend server or API keys:
+
+1. **Content Summarization**
+   - Automatically extracts main content from web pages
+   - Generates concise summaries using on-device AI
+   - No data sent to external servers
+
+2. **Chat Interface**
+   - Real-time AI responses powered by Gemini Nano
+   - Context-aware conversations using page content
+   - Completely private - all processing happens locally
+
+3. **Technical Implementation**
+   - Uses TensorFlow.js for model execution
+   - MediaPipe Tasks for efficient text processing
+   - Optimized for browser performance
+
+### Performance Benefits
+- No network latency for AI features
+- Works offline after initial setup
+- Enhanced privacy with local processing
+- Reduced resource usage
+
+## 🔒 Privacy & Security
+- All AI processing happens on your device
+- No data sent to external servers
+- No API keys or authentication required
+- Complete privacy for your browsing data
+
+2. Start the extension development server:
+   ```bash
+   npm run dev
+   ```
+
+3. Build the extension:
+   ```bash
+   npm run build
+   ```
+
+4. Load the extension in Chrome:
+   - Open Chrome and go to `chrome://extensions`
+   - Enable "Developer mode"
+   - Click "Load unpacked" and select the `dist` folder
+
+## 🧠 AI Features
+
+### Local AI Processing
+The extension uses local AI models for efficient content processing:
+
+1. **Content Summarization**
+   - Automatically extracts main content from web pages
+   - Generates concise, bullet-point summaries
+   - No external API calls needed
+
+2. **Task Suggestions**
+   - AI-powered task breakdown
+   - Resource suggestions
+   - Time estimates
+   - All computed locally
+
+3. **Chat Interface**
+   - Context-aware responses
+   - Local model inference
+   - Privacy-preserving design
+   - Available in the extension's sidepanel
+
+2. **How It Works**
+   - Content script extracts page content
+   - Backend processes content through Gemini API
+   - Results displayed in React sidepanel UI
+   - State managed via Zustand store
+
+3. **Configuration**
+   The summarization feature can be configured in `src/store/sidePanelStore.ts`:
+   - Customize prompt templates
+   - Adjust content length limits
+   - Modify summarization style
+
+### Security Notes
+- API keys must be stored securely in backend `.env`
+- Never expose API keys in frontend code
+- Use appropriate CORS and request validation
+
+## 🔒 Permissions
+The extension requires these permissions:
+- `sidePanel`: For AI summary display
+- `scripting`: For content extraction
+- `activeTab`: For current page access
+- Network access to backend API
 
 3. **Extension Components**
    - Background Service Worker

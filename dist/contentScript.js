@@ -1,3 +1,9 @@
+window.addEventListener("load", () => {
+  chrome.runtime.sendMessage({
+    type: "PAGE_CONTENT",
+    text: extractPageContent()
+  });
+});
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   if (request.action === "getPageContent") {
     const content = extractPageContent();

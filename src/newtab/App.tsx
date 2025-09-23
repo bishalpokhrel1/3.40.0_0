@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useAppStore } from '@/store/appStore'
-import WeatherAnimation from '@/components/WeatherAnimation'
-import Greeting from '@/components/Greeting'
-import FeedGrid from '@/components/FeedGrid'
-import TaskPanel from '@/components/TaskPanel'
-import Onboarding from '@/components/Onboarding'
-import SettingsPanel from '@/components/SettingsPanel'
-import { Settings } from 'lucide-react'
+import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAppStore } from '@/store/appStore';
+import WeatherAnimation from '@/components/WeatherAnimation';
+import Greeting from '@/components/Greeting';
+import FeedGrid from '@/components/FeedGrid';
+import TaskPanel from '@/components/TaskPanel';
+import Onboarding from '@/components/Onboarding';
+import SettingsPanel from '@/components/SettingsPanel';
+import { Settings } from 'lucide-react';
 
 function App() {
   const { 
@@ -15,17 +15,22 @@ function App() {
     showSettings, 
     setShowSettings,
     initializeApp 
-  } = useAppStore()
+  } = useAppStore();
   
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const init = async () => {
-      await initializeApp()
-      setIsLoading(false)
-    }
-    init()
-  }, [initializeApp])
+      try {
+        await initializeApp();
+      } catch (error) {
+        console.error('Failed to initialize app:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    init();
+  }, [initializeApp]);
 
   if (isLoading) {
     return (
@@ -33,69 +38,77 @@ function App() {
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-white text-2xl font-light"
+          className="glass-card"
         >
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            <span>Loading Manage...</span>
+            <span className="text-white text-2xl font-light">Loading Manage...</span>
           </div>
         </motion.div>
       </div>
-    )
+    );
   }
 
   if (!isOnboarded) {
-    return <Onboarding />
+    return <Onboarding />;
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Weather Background Animation */}
-      <WeatherAnimation />
-      
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800">
+      {/* Background */}
+      <div className="fixed inset-0 z-0">
+        <WeatherAnimation />
+      </div>
+
       {/* Settings Button */}
       <motion.button
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         onClick={() => setShowSettings(true)}
-        className="fixed top-6 right-6 z-50 glass-card p-3 hover:bg-white/20 transition-colors"
+        className="fixed top-8 right-8 z-50 glass-button"
+        whileHover={{ scale: 1.1, rotate: 90 }}
+        whileTap={{ scale: 0.9 }}
       >
-        <Settings className="w-5 h-5 text-white" />
+        <Settings className="w-6 h-6" />
       </motion.button>
 
       {/* Main Content */}
       <div className="relative z-10 min-h-screen">
-        <div className="container mx-auto px-6 py-8">
-          {/* Header Section */}
+        <div className="container mx-auto px-4 py-8">
+          {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-8"
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="glass-card p-6 rounded-2xl w-fit mb-8"
           >
             <Greeting />
           </motion.div>
 
           {/* Main Grid Layout */}
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 h-[calc(100vh-200px)]">
-            {/* Feed Section - Takes up most space */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Feed Section */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="xl:col-span-3"
+              transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+              className="lg:col-span-8"
             >
-              <FeedGrid />
+              <div className="glass-card p-6 rounded-2xl h-full">
+                <FeedGrid />
+              </div>
             </motion.div>
 
-            {/* Task Panel - Right sidebar */}
+            {/* Task Panel */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="xl:col-span-1"
+              transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
+              className="lg:col-span-4"
             >
-              <TaskPanel />
+              <div className="glass-card p-6 rounded-2xl sticky top-8">
+                <TaskPanel />
+              </div>
             </motion.div>
           </div>
         </div>
@@ -106,7 +119,7 @@ function App() {
         {showSettings && <SettingsPanel />}
       </AnimatePresence>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

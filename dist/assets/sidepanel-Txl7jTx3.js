@@ -1,4 +1,4 @@
-import { a as createLucideIcon, c as create, r as reactExports, j as jsxRuntimeExports, S as Sparkles, A as AnimatePresence, m as motion, b as client, R as React } from './globals-DQiCxdFl.js';
+import { a as createLucideIcon, c as create, r as reactExports, j as jsxRuntimeExports, S as Sparkles, A as AnimatePresence, m as motion, b as client, R as React } from './globals-B8OnnzJP.js';
 
 /**
  * @license lucide-react v0.344.0 - ISC
@@ -53,40 +53,195 @@ const Send = createLucideIcon("Send", [
   ["path", { d: "M22 2 11 13", key: "nzbqef" }]
 ]);
 
+const API_KEY = "AIzaSyAppyXuY_x1DeIkWpVzhT47a_GbucTTW2M";
+const MODEL_NAME = "gemini-pro";
+const API_URL = "https://generativelanguage.googleapis.com/v1beta";
+const MAX_REQUESTS_PER_MINUTE = 60;
+const requestTimes = [];
+function checkRateLimit() {
+  const now = Date.now();
+  const oneMinuteAgo = now - 6e4;
+  while (requestTimes.length > 0 && requestTimes[0] < oneMinuteAgo) {
+    requestTimes.shift();
+  }
+  if (requestTimes.length >= MAX_REQUESTS_PER_MINUTE) {
+    return false;
+  }
+  requestTimes.push(now);
+  return true;
+}
+async function callGeminiAPI(prompt) {
+  console.log("Starting Gemini API call with prompt:", prompt);
+  if (!checkRateLimit()) {
+    throw new Error("Rate limit exceeded. Please try again in a moment.");
+  }
+  try {
+    console.log("Making API request to:", `${API_URL}/models/${MODEL_NAME}:generateContent`);
+    console.log("API Key available:", !!API_KEY);
+    try {
+      const preflightResponse = await fetch(`${API_URL}/models/gemini-pro:generateContent?key=${API_KEY}`, {
+        method: "OPTIONS",
+        headers: {
+          "Origin": window.location.origin,
+          "Access-Control-Request-Method": "POST",
+          "Access-Control-Request-Headers": "Content-Type"
+        }
+      });
+      console.log("Preflight response:", preflightResponse.status, preflightResponse.statusText);
+    } catch (preflightError) {
+      console.warn("Preflight request failed:", preflightError);
+    }
+    const response = await fetch(
+      `${API_URL}/models/gemini-pro:generateContent?key=${API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024
+          },
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_HATE_SPEECH",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            }
+          ]
+        })
+      }
+    );
+    if (!response.ok) {
+      const error = await response.text();
+      console.error("Gemini API error:", error);
+      console.error("Response status:", response.status);
+      console.error("Response status text:", response.statusText);
+      throw new Error(`API call failed: ${response.statusText} (${response.status})`);
+    }
+    const data = await response.json();
+    return data.candidates[0]?.content?.parts[0]?.text || "No response generated";
+  } catch (error) {
+    console.error("Error calling Gemini API:", error);
+    if (error instanceof TypeError && error.message.includes("CORS")) {
+      console.error("CORS ERROR detected. Details:", {
+        origin: window.location.origin,
+        apiUrl: API_URL,
+        error: error.message
+      });
+      throw new Error("CORS error: The API request was blocked by the browser. Please check the console for more details.");
+    }
+    if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
+      console.error("Network Error. Details:", {
+        origin: window.location.origin,
+        apiUrl: API_URL,
+        error: error.message
+      });
+      throw new Error("Network error: Could not connect to the API. Please check your internet connection.");
+    }
+    throw error;
+  }
+}
+let retryCount = 0;
+const MAX_RETRIES = 3;
+async function withRetry(fn) {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retryCount < MAX_RETRIES && error instanceof Error && !error.message.includes("Rate limit")) {
+      retryCount++;
+      const delay = Math.pow(2, retryCount) * 1e3;
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      return withRetry(fn);
+    }
+    throw error;
+  } finally {
+    retryCount = 0;
+  }
+}
+async function generateResponse(prompt, context) {
+  const enhancedPrompt = context ? `Context: ${context}
+
+Question: ${prompt}
+
+Please provide a helpful response.` : prompt;
+  try {
+    const response = await withRetry(() => callGeminiAPI(enhancedPrompt));
+    return {
+      text: response,
+      tokens: enhancedPrompt.split(/\s+/).length
+    };
+  } catch (error) {
+    console.error("Generation failed:", error);
+    throw error;
+  }
+}
+async function summarizeContent(content) {
+  const prompt = `Please provide a concise summary of this content in 3-5 key points:
+
+${content}`;
+  try {
+    const response = await withRetry(() => callGeminiAPI(prompt));
+    return {
+      text: response,
+      tokens: prompt.split(/\s+/).length
+    };
+  } catch (error) {
+    console.error("Summarization failed:", error);
+    throw error;
+  }
+}
+
 const useSidePanelStore = create((set, get) => ({
   currentSummary: null,
   chatMessages: [],
   isLoading: false,
+  error: null,
+  setError: (error) => set({ error }),
+  setSummary: (summary) => set({ currentSummary: summary }),
+  clearChat: () => set({ chatMessages: [] }),
   summarizePage: async () => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (!tab.id) return;
+      if (!tab.id) {
+        throw new Error("No active tab found");
+      }
       const response = await chrome.tabs.sendMessage(tab.id, {
         action: "getPageContent"
       });
       if (response?.content) {
-        let summary = "";
-        try {
-          const win = window;
-          if (win.ai?.summarizer) {
-            const summarizer = await win.ai.summarizer.create();
-            summary = await summarizer.summarize(response.content);
-          } else {
-            summary = response.content.slice(0, 500) + "...";
-          }
-        } catch (error) {
-          console.warn("AI Summarizer not available, using fallback");
-          const sentences = response.content.split(". ").slice(0, 3);
-          summary = sentences.join(". ") + (sentences.length === 3 ? "." : "");
-        }
-        set({ currentSummary: summary });
+        const result = await summarizeContent(response.content);
+        set({ currentSummary: result.text });
       } else {
         set({ currentSummary: "No content available to summarize on this page." });
       }
     } catch (error) {
-      console.error("Failed to summarize page:", error);
-      set({ currentSummary: "Failed to analyze page content." });
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      console.error("Failed to summarize page:", errorMessage);
+      set({
+        currentSummary: "Failed to analyze page content.",
+        error: errorMessage
+      });
     } finally {
       set({ isLoading: false });
     }
@@ -99,54 +254,29 @@ const useSidePanelStore = create((set, get) => ({
     };
     set((state) => ({
       chatMessages: [...state.chatMessages, userMessage],
-      isLoading: true
+      isLoading: true,
+      error: null
     }));
     try {
-      let response = "";
-      try {
-        const win = window;
-        if (win.ai?.languageModel) {
-          const session = await win.ai.languageModel.create({
-            systemPrompt: `You are a helpful assistant that can answer questions about web pages. 
-            The current page summary is: ${get().currentSummary || "No summary available"}`
-          });
-          response = await session.prompt(message);
-        } else {
-          throw new Error("AI not available");
-        }
-      } catch (error) {
-        console.warn("Chrome AI not available, using fallback response");
-        const fallbackResponses = [
-          "I'd be happy to help! However, Chrome's built-in AI is not available right now. Please try again later.",
-          "That's an interesting question! The AI features are currently being loaded. Please check back in a moment.",
-          "I'm processing your request, but the AI service is temporarily unavailable. You can try refreshing the page."
-        ];
-        response = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
-      }
+      const result = await generateResponse(message, get().currentSummary || void 0);
       const assistantMessage = {
         role: "assistant",
-        content: response,
+        content: result.text,
         timestamp: Date.now()
       };
       set((state) => ({
         chatMessages: [...state.chatMessages, assistantMessage],
-        isLoading: false
+        isLoading: false,
+        error: null
       }));
     } catch (error) {
-      console.error("Failed to send chat message:", error);
-      const errorMessage = {
-        role: "assistant",
-        content: "Sorry, I encountered an error processing your message. Please try again.",
-        timestamp: Date.now()
-      };
-      set((state) => ({
-        chatMessages: [...state.chatMessages, errorMessage],
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      console.error("Chat error:", errorMessage);
+      set({
+        error: errorMessage,
         isLoading: false
-      }));
+      });
     }
-  },
-  clearChat: () => {
-    set({ chatMessages: [] });
   }
 }));
 

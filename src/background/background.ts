@@ -1,7 +1,7 @@
 import { FeedItem, Article, AIWindow } from '../types/feedItem';
 
 // Background service worker for Manage Chrome Extension
-console.log('Background script loaded')
+console.log('Background script loaded');
 
 // Add Chrome types reference
 /// <reference types="chrome"/>
@@ -26,15 +26,31 @@ interface MessageRequest {
   context?: string;
 }
 
-interface MessageResponse {
+type TaskSuggestionResponse = {
   success: boolean;
-  message?: string;
-  items?: FeedItem[];
   suggestions?: string[];
+  error?: string;
+};
+
+type FeedResponse = {
+  success: boolean;
+  items?: FeedItem[];
+  error?: string;
+};
+
+type SummaryResponse = {
+  success: boolean;
   summary?: string;
+  error?: string;
+};
+
+type ChatResponse = {
+  success: boolean;
   response?: string;
   error?: string;
-}
+};
+
+type MessageResponse = TaskSuggestionResponse | FeedResponse | SummaryResponse | ChatResponse;
 
 // Message handling with error handling
 chrome.runtime.onMessage.addListener((
@@ -60,7 +76,7 @@ chrome.runtime.onMessage.addListener((
           throw new Error('No task provided for suggestions')
         }
         handleGetTaskSuggestions(request.task)
-          .then(response => sendResponse({ success: true, ...response }))
+          .then(({ suggestions }) => sendResponse({ success: true, suggestions }))
           .catch(error => sendResponse({ success: false, error: error.message }))
         return true
 

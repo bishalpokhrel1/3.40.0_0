@@ -165,98 +165,132 @@ const FeedGrid: React.FC = () => {
   }
 
   return (
-    <div className="glass-card p-6">
+    <div className="glass-card card-padding">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold text-white flex items-center space-x-2">
-          <Sparkles className="w-6 h-6" />
+        <h2 className="heading-secondary flex items-center space-x-3">
+          <Sparkles className="w-7 h-7" />
           <span>Your Curated Feed</span>
         </h2>
-        <button
+        <motion.button
           onClick={loadFeedItems}
-          className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors text-sm"
+          className="btn-secondary interactive-element"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
+          <Sparkles className="w-4 h-4 mr-2" />
           Refresh
-        </button>
+        </motion.button>
       </div>
 
       {feedItems.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">📰</div>
-          <h3 className="text-xl font-semibold text-white mb-2">No articles yet</h3>
-          <p className="text-white/70 mb-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center py-20"
+        >
+          <motion.div 
+            className="text-8xl mb-8 animate-pulse-slow"
+            animate={{ 
+              rotate: [0, 5, -5, 0],
+              scale: [1, 1.1, 1]
+            }}
+            transition={{ 
+              duration: 3,
+              repeat: Infinity,
+              repeatDelay: 2
+            }}
+          >
+            📰
+          </motion.div>
+          <h3 className="heading-secondary mb-4">No articles yet</h3>
+          <p className="text-white/70 mb-8 text-xl max-w-md mx-auto leading-relaxed">
             We're curating articles based on your interests: {userPreferences.interests.join(', ')}
           </p>
-          <button
+          <motion.button
             onClick={loadFeedItems}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            className="btn-primary"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
+            <Sparkles className="w-5 h-5 mr-2" />
             Load Articles
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {feedItems.map((item, index) => (
             <motion.article
               key={item.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="feed-card group cursor-pointer"
+              transition={{ duration: 0.6, delay: index * 0.15 }}
+              className="feed-card group cursor-pointer interactive-element"
               onClick={() => openArticle(item.url)}
+              whileHover={{ y: -4 }}
             >
               {/* Article Image */}
               {item.imageUrl && (
-                <div className="h-48 overflow-hidden">
+                <div className="h-56 overflow-hidden relative">
                   <img
                     src={item.imageUrl}
                     alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
+                  {/* Gradient overlay for better text readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                 </div>
               )}
 
-              <div className="p-4">
+              <div className="p-8">
                 {/* Relevance Score & Tags */}
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-6">
                   {item.relevanceScore && (
-                    <div className="flex items-center space-x-1">
-                      <Sparkles className="w-4 h-4 text-yellow-500" />
-                      <span className="text-sm font-medium text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full">
+                    <motion.div 
+                      className="flex items-center space-x-2"
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      <span className="status-indicator bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 font-bold border border-amber-200">
                         {item.relevanceScore}% match
                       </span>
-                    </div>
+                    </motion.div>
                   )}
-                  <div className="flex items-center space-x-1 text-gray-500 text-sm">
+                  <div className="flex items-center space-x-2 text-gray-400 text-sm font-medium">
                     <Clock className="w-4 h-4" />
                     <span>{formatDistanceToNow(new Date(item.publishedAt), { addSuffix: true })}</span>
                   </div>
                 </div>
 
                 {/* Title */}
-                <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                <h3 className="font-bold text-gray-900 mb-4 line-clamp-2 group-hover:text-blue-600 transition-colors text-xl leading-tight">
                   {item.title}
                 </h3>
 
                 {/* AI Summary */}
                 {item.aiSummary && (
-                  <div className="mb-3">
-                    <div className="flex items-center space-x-1 mb-1">
-                      <Sparkles className="w-3 h-3 text-blue-500" />
-                      <span className="text-xs font-medium text-blue-600">AI Summary</span>
+                  <div className="mb-6">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <motion.div
+                        animate={{ rotate: [0, 360] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      >
+                        <Sparkles className="w-4 h-4 text-blue-500" />
+                      </motion.div>
+                      <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">AI Summary</span>
                     </div>
-                    <p className="text-sm text-gray-600 line-clamp-3">
+                    <p className="text-sm text-gray-700 line-clamp-3 leading-relaxed font-medium">
                       {item.aiSummary}
                     </p>
                   </div>
                 )}
 
                 {/* Source & Tags */}
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-gray-700">{item.source}</span>
+                <div className="flex items-center justify-between mb-6">
+                  <span className="text-sm font-bold text-gray-800 bg-gray-100 px-3 py-1 rounded-full">{item.source}</span>
                   {item.tags && item.tags.length > 0 && (
                     <div className="flex items-center space-x-1">
-                      <Tag className="w-3 h-3 text-gray-400" />
-                      <span className="text-xs text-gray-500">
+                      <Tag className="w-4 h-4 text-gray-400" />
+                      <span className="text-xs text-gray-600 font-semibold">
                         {item.tags.slice(0, 2).join(', ')}
                       </span>
                     </div>
@@ -264,37 +298,45 @@ const FeedGrid: React.FC = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                  <div className="flex items-center space-x-2">
-                    <button
+                <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+                  <div className="flex items-center space-x-4">
+                    <motion.button
                       onClick={(e) => {
                         e.stopPropagation()
                         handleRating(item.id, 'up')
                       }}
-                      className={`p-1 rounded transition-colors ${
+                      className={`p-3 rounded-xl transition-all duration-200 ${
                         item.userRating === 'up'
-                          ? 'text-green-600 bg-green-100'
+                          ? 'text-green-600 bg-green-100 shadow-md'
                           : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
                       }`}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      <ThumbsUp className="w-4 h-4" />
-                    </button>
-                    <button
+                      <ThumbsUp className="w-5 h-5" />
+                    </motion.button>
+                    <motion.button
                       onClick={(e) => {
                         e.stopPropagation()
                         handleRating(item.id, 'down')
                       }}
-                      className={`p-1 rounded transition-colors ${
+                      className={`p-3 rounded-xl transition-all duration-200 ${
                         item.userRating === 'down'
-                          ? 'text-red-600 bg-red-100'
+                          ? 'text-red-600 bg-red-100 shadow-md'
                           : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
                       }`}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      <ThumbsDown className="w-4 h-4" />
-                    </button>
+                      <ThumbsDown className="w-5 h-5" />
+                    </motion.button>
                   </div>
                   
-                  <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                  <motion.div
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                  >
+                    <ExternalLink className="w-6 h-6 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                  </motion.div>
                 </div>
               </div>
             </motion.article>

@@ -15,7 +15,17 @@ if (!fs.existsSync(distDir)) {
 const manifest = JSON.parse(fs.readFileSync(path.resolve(rootDir, 'manifest.json'), 'utf8'));
 
 // Update manifest paths for built files
+if (!manifest.background) {
+  manifest.background = {};
+}
 manifest.background.service_worker = 'background.js';
+
+if (!manifest.content_scripts) {
+  manifest.content_scripts = [{ matches: ['<all_urls>'] }];
+}
+if (!manifest.content_scripts[0]) {
+  manifest.content_scripts[0] = { matches: ['<all_urls>'] };
+}
 manifest.content_scripts[0].js = ['contentScript.js'];
 
 // Write updated manifest

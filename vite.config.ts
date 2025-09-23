@@ -7,9 +7,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   plugins: [react()],
+  css: {
+    postcss: './postcss.config.js',
+  },
   build: {
     target: 'esnext',
-    minify: false, // Makes debugging easier
+    minify: false,
     rollupOptions: {
       input: {
         newtab: path.resolve(__dirname, 'newtab.html'),
@@ -28,7 +31,7 @@ export default defineConfig({
       }
     },
     outDir: 'dist',
-    assetsInlineLimit: 0, // Don't inline assets into JS
+    assetsInlineLimit: 0,
   },
   resolve: {
     alias: {

@@ -72,13 +72,11 @@ const TaskPanel: React.FC = () => {
     setExpandedTasks(newExpanded)
   }
 
-  const getPriorityColor = (priority: 'low' | 'medium' | 'high') => {
-    switch (priority) {
-      case 'high': return 'text-red-600 bg-red-100'
-      case 'medium': return 'text-yellow-600 bg-yellow-100'
-      case 'low': return 'text-green-600 bg-green-100'
-    }
-  }
+  const priorityColorMap = {
+    high: 'text-red-600 bg-red-100',
+    medium: 'text-yellow-600 bg-yellow-100',
+    low: 'text-green-600 bg-green-100'
+  } as const;
 
   const completedTasks = tasks.filter(task => task.completed)
   const pendingTasks = tasks.filter(task => !task.completed)
@@ -93,18 +91,25 @@ const TaskPanel: React.FC = () => {
   }
 
   return (
-    <div className="glass-card p-6 h-full flex flex-col">
+    <div className="glass-card card-padding h-full flex flex-col">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-white flex items-center space-x-2">
-          <Check className="w-5 h-5" />
+        <h2 className="heading-secondary flex items-center space-x-3">
+          <motion.div
+            animate={{ rotate: [0, 360] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          >
+            <Check className="w-6 h-6" />
+          </motion.div>
           <span>Tasks</span>
         </h2>
-        <button
+        <motion.button
           onClick={() => setShowAddTask(!showAddTask)}
-          className="p-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors"
+          className="btn-secondary interactive-element"
+          whileHover={{ scale: 1.1, rotate: 90 }}
+          whileTap={{ scale: 0.9 }}
         >
-          <Plus className="w-4 h-4" />
-        </button>
+          <Plus className="w-5 h-5" />
+        </motion.button>
       </div>
 
       {/* Add Task Form */}
@@ -114,123 +119,167 @@ const TaskPanel: React.FC = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="mb-6 overflow-hidden"
+            className="mb-8 overflow-hidden"
           >
-            <div className="task-card space-y-3">
+            <div className="task-card space-y-4">
               <input
                 type="text"
                 placeholder="Task title..."
                 value={newTaskTitle}
                 onChange={(e) => setNewTaskTitle(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="form-input text-lg font-medium"
                 onKeyPress={(e) => e.key === 'Enter' && handleAddTask()}
+                autoFocus
               />
               
               <textarea
                 placeholder="Description (optional)..."
                 value={newTaskDescription}
                 onChange={(e) => setNewTaskDescription(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                rows={2}
+                className="form-textarea"
+                rows={3}
               />
               
-              <div className="flex space-x-2">
-                <select
-                  value={newTaskPriority}
-                  onChange={(e) => setNewTaskPriority(e.target.value as 'low' | 'medium' | 'high')}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="low">Low Priority</option>
-                  <option value="medium">Medium Priority</option>
-                  <option value="high">High Priority</option>
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Priority</label>
+                  <select
+                    value={newTaskPriority}
+                    onChange={(e) => setNewTaskPriority(e.target.value as 'low' | 'medium' | 'high')}
+                    className="form-select"
+                  >
+                    <option value="low">🟢 Low Priority</option>
+                    <option value="medium">🟡 Medium Priority</option>
+                    <option value="high">🔴 High Priority</option>
+                  </select>
+                </div>
                 
-                <input
-                  type="date"
-                  value={newTaskDueDate}
-                  onChange={(e) => setNewTaskDueDate(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Due Date</label>
+                  <input
+                    type="date"
+                    value={newTaskDueDate}
+                    onChange={(e) => setNewTaskDueDate(e.target.value)}
+                    className="form-input"
+                  />
+                </div>
               </div>
               
-              <div className="flex space-x-2">
-                <button
+              <div className="flex space-x-3 pt-2">
+                <motion.button
                   onClick={handleAddTask}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="flex-1 btn-primary"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
+                  <Plus className="w-4 h-4 mr-2" />
                   Add Task
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   onClick={() => setShowAddTask(false)}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                  className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl transition-colors"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   Cancel
-                </button>
+                </motion.button>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* Task Statistics */}
+      {tasks.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 grid grid-cols-3 gap-4"
+        >
+          <div className="text-center">
+            <div className="text-2xl font-bold text-white">{tasks.length}</div>
+            <div className="text-white/70 text-xs font-medium">Total</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-green-400">{completedTasks.length}</div>
+            <div className="text-white/70 text-xs font-medium">Completed</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-blue-400">{pendingTasks.length}</div>
+            <div className="text-white/70 text-xs font-medium">Pending</div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Tasks List */}
       <div className="flex-1 overflow-y-auto space-y-4">
         {/* Pending Tasks */}
         {pendingTasks.length > 0 && (
           <div>
-            <h3 className="text-white/80 text-sm font-medium mb-3">
+            <h3 className="text-white/90 text-base font-bold mb-4 flex items-center space-x-2">
+              <span>📋</span>
+              <span>
               Pending ({pendingTasks.length})
+              </span>
             </h3>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {pendingTasks.map((task) => (
                 <motion.div
                   key={task.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
+                  whileHover={{ scale: 1.02 }}
                   className="task-card"
                 >
-                  <div className="flex items-start space-x-3">
-                    <button
+                  <div className="flex items-start space-x-4">
+                    <motion.button
                       onClick={() => toggleTask(task.id)}
-                      className="mt-1 w-5 h-5 border-2 border-gray-300 rounded hover:border-blue-500 transition-colors flex items-center justify-center"
+                      className="mt-1 w-6 h-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 transition-all duration-200 flex items-center justify-center"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      {task.completed && <Check className="w-3 h-3 text-blue-600" />}
-                    </button>
+                      {task.completed && <Check className="w-4 h-4 text-blue-600" />}
+                    </motion.button>
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-gray-900 truncate">
+                        <h4 className="font-bold text-gray-900 truncate text-lg">
                           {task.title}
                         </h4>
-                        <div className="flex items-center space-x-1">
-                          <span className={`px-2 py-1 text-xs rounded-full ${getPriorityColor(task.priority)}`}>
-                            {task.priority}
+                        <div className="flex items-center space-x-2">
+                          <span className={`${priorityColorMap[task.priority]} text-xs px-2 py-1 rounded-lg`}>
+                            {task.priority.toUpperCase()}
                           </span>
                           {task.aiSuggestions && (
-                            <button
+                            <motion.button
                               onClick={() => toggleTaskExpansion(task.id)}
-                              className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
                             >
-                              <Sparkles className="w-4 h-4" />
-                            </button>
+                              <Sparkles className="w-5 h-5" />
+                            </motion.button>
                           )}
-                          <button
+                          <motion.button
                             onClick={() => deleteTask(task.id)}
-                            className="p-1 text-red-600 hover:bg-red-50 rounded"
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
                           >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                            <Trash2 className="w-5 h-5" />
+                          </motion.button>
                         </div>
                       </div>
                       
                       {task.description && (
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-sm text-gray-600 mt-2 leading-relaxed">
                           {task.description}
                         </p>
                       )}
                       
                       {task.dueDate && (
-                        <div className="flex items-center space-x-1 mt-2 text-xs text-gray-500">
-                          <Calendar className="w-3 h-3" />
+                        <div className="flex items-center space-x-2 mt-3 text-sm text-gray-500 font-medium">
+                          <Calendar className="w-4 h-4" />
                           <span>Due {format(new Date(task.dueDate), 'MMM d, yyyy')}</span>
                         </div>
                       )}
@@ -242,18 +291,29 @@ const TaskPanel: React.FC = () => {
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
-                            className="mt-3 p-3 bg-blue-50 rounded-md"
+                            className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200"
                           >
-                            <div className="flex items-center space-x-1 mb-2">
-                              <Sparkles className="w-4 h-4 text-blue-600" />
-                              <span className="text-sm font-medium text-blue-800">AI Suggestions</span>
+                            <div className="flex items-center space-x-2 mb-3">
+                              <motion.div
+                                animate={{ rotate: [0, 360] }}
+                                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                              >
+                                <Sparkles className="w-5 h-5 text-blue-600" />
+                              </motion.div>
+                              <span className="text-sm font-bold text-blue-800 uppercase tracking-wide">AI Suggestions</span>
                             </div>
-                            <ul className="space-y-1">
+                            <ul className="space-y-2">
                               {task.aiSuggestions.map((suggestion, index) => (
-                                <li key={index} className="text-sm text-blue-700 flex items-start space-x-2">
-                                  <span className="text-blue-400 mt-1">•</span>
-                                  <span>{suggestion}</span>
-                                </li>
+                                <motion.li 
+                                  key={index} 
+                                  initial={{ opacity: 0, x: -10 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: index * 0.1 }}
+                                  className="text-sm text-blue-800 flex items-start space-x-3 font-medium"
+                                >
+                                  <span className="text-blue-500 mt-1 font-bold">{index + 1}.</span>
+                                  <span className="leading-relaxed">{suggestion}</span>
+                                </motion.li>
                               ))}
                             </ul>
                           </motion.div>
@@ -311,30 +371,58 @@ const TaskPanel: React.FC = () => {
 
         {/* Empty State */}
         {tasks.length === 0 && (
-          <div className="text-center py-8">
-            <div className="text-4xl mb-4">✅</div>
-            <h3 className="text-lg font-semibold text-white mb-2">No tasks yet</h3>
-            <p className="text-white/70 text-sm mb-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-12"
+          >
+            <motion.div 
+              className="text-6xl mb-6"
+              animate={{ 
+                rotate: [0, 10, -10, 0],
+                scale: [1, 1.1, 1]
+              }}
+              transition={{ 
+                duration: 2,
+                repeat: Infinity,
+                repeatDelay: 3
+              }}
+            >
+              ✅
+            </motion.div>
+            <h3 className="text-xl font-bold text-white mb-3">No tasks yet</h3>
+            <p className="text-white/70 text-base mb-6 leading-relaxed">
               Add your first task to get started with productivity tracking.
             </p>
-            <button
+            <motion.button
               onClick={() => setShowAddTask(true)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              className="btn-primary"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
+              <Plus className="w-5 h-5 mr-2" />
               Add Your First Task
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         )}
       </div>
 
       {/* Google Tasks Sync Status */}
       {userPreferences.googleTasksSync && (
-        <div className="mt-4 p-3 bg-green-100 rounded-lg">
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full" />
-            <span className="text-sm text-green-800">Synced with Google Tasks</span>
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-6 p-4 bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl border border-green-200"
+        >
+          <div className="flex items-center space-x-3">
+            <motion.div 
+              className="w-3 h-3 bg-green-500 rounded-full"
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            <span className="text-sm text-green-800 font-semibold">Synced with Google Tasks</span>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   )
