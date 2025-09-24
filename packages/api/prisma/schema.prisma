@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String            @id @default(cuid())
+  email             String            @unique
+  password          String
+  name              String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  preferences       UserPreferences?
+  workspace         Workspace?
+  googleIntegration GoogleIntegration?
+}
+
+model UserPreferences {
+  id                      String    @id @default(cuid())
+  theme                   String    @default("light")
+  newsCategories          String[]  @default([])
+  weatherLocation         String?
+  enableContentSummary    Boolean   @default(true)
+  enableTaskSuggestions   Boolean   @default(true)
+  enableSmartNotifications Boolean  @default(true)
+  modelPreferences        Json?
+  user                    User      @relation(fields: [userId], references: [id])
+  userId                  String    @unique
+}
+
+model Workspace {
+  id          String       @id @default(cuid())
+  name        String
+  lastSynced  DateTime?
+  items       WorkspaceItem[]
+  collections Collection[]
+  tasks       Task[]
+  notes       Note[]
+  user        User         @relation(fields: [userId], references: [id])
+  userId      String       @unique
+}
+
+model WorkspaceItem {
+  id          String      @id @default(cuid())
+  type        String
+  title       String
+  url         String?
+  content     String?
+  tags        String[]
+  aiSummary   String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id])
+  workspaceId String
+  collections Collection[]
+}
+
+model Collection {
+  id        String          @id @default(cuid())
+  name      String
+  shared    Boolean         @default(false)
+  items     WorkspaceItem[]
+  workspace Workspace       @relation(fields: [workspaceId], references: [id])
+  workspaceId String
+}
+
+model Task {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  status        String
+  dueDate       DateTime?
+  priority      Int       @default(0)
+  tags          String[]
+  aiSuggestions String[]
+  workspace     Workspace @relation(fields: [workspaceId], references: [id])
+  workspaceId   String
+}
+
+model Note {
+  id          String    @id @default(cuid())
+  title       String
+  content     String
+  tags        String[]
+  aiSummary   String?
+  lastEdited  DateTime  @updatedAt
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  workspaceId String
+}
+
+model GoogleIntegration {
+  id           String    @id @default(cuid())
+  connected    Boolean   @default(false)
+  email        String?
+  calendarSync Boolean   @default(false)
+  driveSync    Boolean   @default(false)
+  gmailSync    Boolean   @default(false)
+  tasksSync    Boolean   @default(false)
+  lastSynced   DateTime?
+  user         User      @relation(fields: [userId], references: [id])
+  userId       String    @unique
+}

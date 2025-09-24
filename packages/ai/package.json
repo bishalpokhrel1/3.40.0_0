@@ -1,0 +1,26 @@
+{
+  "name": "@my-extension/ai",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint .",
+    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist"
+  },
+  "dependencies": {
+    "@google-ai/generativelanguage": "^1.1.0",
+    "@tensorflow/tfjs": "^4.11.0",
+    "@types/chrome": "^0.0.246",
+    "langchain": "^0.0.153",
+    "openai": "^4.10.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.6.0",
+    "eslint": "^8.49.0",
+    "typescript": "^5.2.2",
+    "tsup": "^7.2.0"
+  }
+}

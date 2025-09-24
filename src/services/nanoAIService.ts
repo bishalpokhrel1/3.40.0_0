@@ -1,9 +1,21 @@
+/**
+ * Defines the structure for the response from our AI service.
+ */
 export interface NanoAIResponse {
   text: string;
-  tokens: number;
 }
 
-interface GeminiResponse {
+declare global {
+  namespace chrome.ai {
+    function createTextSession(): Promise<AiTextSession>;
+  }
+}
+
+interface AiTextSession {
+  prompt: (text: string) => Promise<string>;
+}
+
+interface GeminiAPIResponse {
   candidates: {
     content: {
       parts: {
@@ -13,102 +25,124 @@ interface GeminiResponse {
   }[];
 }
 
-const API_URL = import.meta.env.VITE_API_URL;
-const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
-const MODEL_NAME = import.meta.env.VITE_MODEL_NAME;
+// A variable to hold our generative AI session instance.
+// We'll initialize this once and reuse it.
+let session: AiTextSession | null = null;
 
-// Rate limiting configuration
-const MAX_REQUESTS_PER_MINUTE = 60;
-const requestTimes: number[] = [];
+// Configuration for the Gemini API fallback
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
-declare global {
-  interface Window {
-    chrome: {
-      ai?: ChromeAI;
-    };
+// Get API key from storage
+async function getApiKey(): Promise<string> {
+  const result = await chrome.storage.sync.get('GEMINI_API_KEY');
+  if (!result.GEMINI_API_KEY) {
+    throw new Error('Gemini API key not configured. Please add it in extension settings.');
   }
+  return result.GEMINI_API_KEY;
 }
 
-let modelInitialized = false;
-
+/**
+ * Initializes the generative AI model session.
+ * It checks if the chrome.ai API is available and creates a text session.
+ * This only runs once.
+ */
+/**
+ * Tries to use Gemini Nano if available, otherwise falls back to Gemini API
+ */
 async function initializeModel() {
-  if (modelInitialized) return;
-  
-  try {
-    // Check if Chrome AI API is available
-    if (!window.chrome?.ai?.generativeContent) {
-      throw new Error('Chrome AI API not available');
+  // If the session is already created, do nothing.
+  if (session) {
+    return;
+  }
+
+  // Check if Chrome Gemini Nano is available
+  if (window.chrome?.ai?.createTextSession) {
+    try {
+      session = await window.chrome.ai.createTextSession();
+      console.log('Gemini Nano session initialized successfully ✅');
+    } catch (error) {
+      console.warn('Failed to initialize Gemini Nano, falling back to remote API:', error);
+      session = null;
     }
-    modelInitialized = true;
-  } catch (error) {
-    console.error('Failed to initialize Chrome AI:', error);
-    throw error;
+  } else {
+    console.warn('Gemini Nano not available - falling back to remote API');
+    console.info('To enable Gemini Nano:');
+    console.info('1. Use Chrome Canary');
+    console.info('2. Enable #prompt-api-for-gemini-nano in chrome://flags');
+    console.info('3. Enable #optimization-guide-on-device-model in chrome://flags');
+    console.info('4. Update model in chrome://components');
   }
 }
 
-async function initializeModel() {
-  if (modelInitialized) return;
+/**
+ * Calls the remote Gemini API
+ */
+async function callGeminiAPI(prompt: string): Promise<string> {
+  const apiKey = await getApiKey();
+  
+  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      contents: [{
+        parts: [{
+          text: prompt
+        }]
+      }]
+    })
+  });
 
-  try {
-    textClassifier = await createClassifier();
-    modelInitialized = true;
-  } catch (error) {
-    console.error('Failed to initialize model:', error);
-    throw error;
+  if (!response.ok) {
+    throw new Error(`Gemini API error: ${response.status}`);
   }
+
+  const data: GeminiAPIResponse = await response.json();
+  return data.candidates[0]?.content?.parts[0]?.text || 'No response generated';
 }
 
-function extractResponseFromResult(result: TextClassifierResult): string {
-  if (!result.classifications?.length) {
-    return 'Could not generate response';
-  }
-
-  const firstResult = result.classifications[0];
-  const topCategory: Category = firstResult?.categories?.[0];
-  return topCategory?.displayName || topCategory?.categoryName || 'Could not generate response';
-}
-
-export async function generateResponse(prompt: string, context?: string): Promise<NanoAIResponse> {
+/**
+ * Generates a response using either Gemini Nano (if available) or remote Gemini API
+ *
+ * @param prompt The question or instruction for the AI.
+ * @returns A promise that resolves to a NanoAIResponse object.
+ */
+export async function generateResponse(prompt: string): Promise<NanoAIResponse> {
   await initializeModel();
   
-  if (!textClassifier) {
-    throw new Error('Text classifier not initialized');
-  }
-
   try {
-    let input = prompt;
-    if (context) {
-      input = `Context: ${context}\n\nQuestion: ${prompt}`;
+    let responseText: string;
+
+    if (session) {
+      // Use Gemini Nano
+      console.log('Using Gemini Nano for response');
+      responseText = await session.prompt(prompt);
+    } else {
+      // Fall back to remote API
+      console.log('Using remote Gemini API for response');
+      responseText = await callGeminiAPI(prompt);
     }
     
-    const result = await textClassifier.classify(input);
     return {
-      text: extractResponseFromResult(result),
-      tokens: input.split(/\s+/).length
+      text: responseText,
     };
   } catch (error) {
-    console.error('Generation failed:', error);
-    throw error;
+    console.error('AI response generation failed:', error);
+    throw new Error('Failed to get a response from the AI model.');
   }
 }
 
+/**
+ * Generates a summary for a given block of content.
+ *
+ * @param content The text content to be summarized.
+ * @returns A promise that resolves to a NanoAIResponse object containing the summary.
+ */
 export async function summarizeContent(content: string): Promise<NanoAIResponse> {
-  await initializeModel();
+  // We can reuse the generateResponse function by creating a specific prompt for summarization.
+  const summaryPrompt = `Provide a concise summary of the following text:\n\n---\n\n${content}`;
   
-  if (!textClassifier) {
-    throw new Error('Text classifier not initialized');
-  }
-
-  try {
-    const prompt = `Please provide a concise summary of this content in 3-5 key points:\n\n${content}`;
-    const result = await textClassifier.classify(prompt);
-    
-    return {
-      text: extractResponseFromResult(result),
-      tokens: prompt.split(/\s+/).length
-    };
-  } catch (error) {
-    console.error('Summarization failed:', error);
-    throw error;
-  }
+  // Call the main generation function with our specialized prompt.
+  return generateResponse(summaryPrompt);
 }

@@ -1,14 +1,23 @@
 {
-  "name": "manage-chrome-extension",
+  "name": "manage-workspace",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "test": "jest",
-    "build:extension": "npm run build && node scripts/build-extension.js"
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "turbo run clean",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "extension:dev": "turbo run dev --filter=@manage/extension",
+    "extension:build": "turbo run build --filter=@manage/extension",
+    "web:dev": "turbo run dev --filter=@manage/web",
+    "mobile:dev": "turbo run dev --filter=@manage/mobile",
+    "backend:dev": "turbo run dev --filter=@manage/backend"
   },
   "dependencies": {
     "@mediapipe/tasks-text": "^0.10.21",
