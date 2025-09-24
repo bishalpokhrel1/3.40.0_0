@@ -20,7 +20,6 @@ const MODEL_NAME = import.meta.env.VITE_MODEL_NAME;
 // Rate limiting configuration
 const MAX_REQUESTS_PER_MINUTE = 60;
 const requestTimes: number[] = [];
-}
 
 declare global {
   interface Window {
