@@ -53,7 +53,7 @@ const Send = createLucideIcon("Send", [
   ["path", { d: "M22 2 11 13", key: "nzbqef" }]
 ]);
 
-const API_KEY = "AIzaSyAppyXuY_x1DeIkWpVzhT47a_GbucTTW2M";
+const API_KEY = "api key here";
 const MODEL_NAME = "gemini-pro";
 const API_URL = "https://generativelanguage.googleapis.com/v1beta";
 const MAX_REQUESTS_PER_MINUTE = 60;
