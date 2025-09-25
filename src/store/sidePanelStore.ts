@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { NanoAIResponse } from '../services/geminiService';
+import type { AIResponse } from '../services/geminiService';
 import { generateResponse, summarizeContent } from '../services/geminiService';
 
 interface ChatMessage {
@@ -50,7 +50,7 @@ export const useSidePanelStore = create<SidePanelState>((set, get) => ({
       });
       
       if (response?.content) {
-        const result: NanoAIResponse = await summarizeContent(response.content);
+        const result: AIResponse = await summarizeContent(response.content);
         set({ currentSummary: result.text });
       } else {
         set({ currentSummary: 'No content available to summarize on this page.' });
@@ -81,7 +81,7 @@ export const useSidePanelStore = create<SidePanelState>((set, get) => ({
     }));
 
     try {
-      const result: NanoAIResponse = await generateResponse(message, get().currentSummary || undefined);
+      const result: AIResponse = await generateResponse(message, get().currentSummary || undefined);
       const assistantMessage: ChatMessage = {
         role: 'assistant',
         content: result.text,

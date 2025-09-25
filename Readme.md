@@ -1,366 +1,294 @@
-# Manage
+# Manage - Personal Dashboard & Productivity Extension
 
-## 🎯 Overview
-A Chrome extension that enhances browsing experience with AI-powered features using Gemini API, weather animations, and productivity tools. Built with React, TypeScript, and Chrome's Manifest V3.
+A comprehensive Chrome extension that transforms your new tab into a personalized productivity dashboard with task management, notes, and AI-powered features.
 
 ## 🌟 Features
-- AI-powered chat and content analysis using Gemini API
-- Real-time weather animations
-- Task management and productivity tools
-- Personalized dashboard
-- Side panel for quick access
+
+### Dashboard (New Tab)
+- **Personalized Greeting**: Time-based greetings with user name
+- **Live Date & Time**: Real-time clock and calendar display
+- **Task Overview**: Quick view of pending and completed tasks with deadlines
+- **Notes Section**: Recent notes with quick access to full notes management
+- **AI Suggestions**: Placeholder for intelligent productivity recommendations
+
+### Task Management
+- **Hierarchical Tasks**: Main tasks with subtasks and notes
+- **Priority System**: High, medium, and low priority levels
+- **Deadline Tracking**: Due dates with overdue, today, and upcoming views
+- **Progress Tracking**: Visual progress bars for subtask completion
+- **Timeline View**: Alternative view for task planning (basic implementation)
+
+### Notes System
+- **Page-Linked Notes**: Notes automatically linked to websites/videos
+- **Rich Organization**: Tags, search, and filtering capabilities
+- **Quick Capture**: Popup panel for rapid note-taking on any website
+- **Content Linking**: Notes can reference specific URLs and domains
+
+### AI Integration (Placeholder)
+- **Content Summarization**: Ready for AI-powered page summarization
+- **Task Generation**: Prepared for intelligent task breakdown
+- **Smart Suggestions**: Framework for AI-driven productivity insights
+- **Content Analysis**: Placeholder for intelligent content insights
+
+### Popup Panel
+- **Universal Access**: Available on any website via extension icon or context menu
+- **Quick Notes**: Rapid note-taking for the current page
+- **AI Tools**: Ready-to-connect AI features for content analysis
+- **Page Context**: Automatically captures page title, URL, and domain
 
 ## 🏗 Architecture
 
-### Core Components
-1. **Frontend Layer**
-   - React 18 for UI components
-   - TypeScript for type safety
-   - Vite for build optimization
-   - Tailwind CSS for styling
-   - Framer Motion for animations
+### Frontend Structure
+```
+src/
+├── components/           # React components
+│   ├── Dashboard/       # New tab dashboard components
+│   ├── Popup/          # Popup panel components
+│   ├── Tasks/          # Task management components
+│   └── Notes/          # Notes management components
+├── services/           # Business logic and API layers
+│   ├── storageService.ts    # Local storage management
+│   └── apiService.ts        # Backend API placeholders
+├── store/              # State management
+│   └── appStore.ts     # Zustand store with persistence
+├── types/              # TypeScript definitions
+├── background/         # Extension background script
+├── content/           # Content script for page interaction
+└── pages/             # Full-page components
+```
 
-2. **State Management**
-   - Zustand for global state
-   - Chrome Storage API for persistence
-   - Real-time state sync across components
+### Data Flow
+1. **Local Storage**: Chrome storage API for immediate data persistence
+2. **State Management**: Zustand store with automatic persistence
+3. **Backend Sync**: Placeholder API layer ready for backend integration
+4. **Cross-Platform Prep**: Data structure designed for mobile/web sync
 
-3. **AI Integration**
-   - Google's Gemini API integration
-   - Real-time content analysis
-   - Smart task suggestions
-   - Content summarization
-   - Secure API key management
-
-4. **Browser Integration**
-   - Chrome Manifest V3 compliance
-   - Service Workers for background tasks
-   - Content script for page analysis
-   - Side panel for quick access
-
-## 🚀 Getting Started
+## 🚀 Installation & Development
 
 ### Prerequisites
-1. Node.js 16+ and npm
-2. Chrome browser
-3. Gemini API key
+- Node.js 16+ and npm
+- Chrome browser for testing
 
-### Environment Setup
-1. Clone the repository
-2. Install dependencies:
+### Setup
+1. **Clone and Install**
    ```bash
+   git clone <repository-url>
+   cd manage-extension
    npm install
    ```
-3. Create a `.env` file in the root directory:
-   ```env
-   VITE_GOOGLE_API_KEY=your_gemini_api_key
-   VITE_API_URL=https://generativelanguage.googleapis.com/v1beta
-   VITE_MODEL_NAME=gemini-pro
-   ```
 
-### Development
-1. Start the development server:
-   ```bash
-   npm run dev
-   ```
-2. Build the extension:
-   ```bash
-   npm run build:extension
-   ```
-   - Download the Gemini Nano model files
-   - Place them in `public/models/` directory
-
-2. Start the development server:
+2. **Development Build**
    ```bash
    npm run dev
    ```
 
-## 🤖 AI Features
-
-### On-Device AI Processing
-The extension uses Gemini Nano for local AI processing without needing a backend server or API keys:
-
-1. **Content Summarization**
-   - Automatically extracts main content from web pages
-   - Generates concise summaries using on-device AI
-   - No data sent to external servers
-
-2. **Chat Interface**
-   - Real-time AI responses powered by Gemini Nano
-   - Context-aware conversations using page content
-   - Completely private - all processing happens locally
-
-3. **Technical Implementation**
-   - Uses TensorFlow.js for model execution
-   - MediaPipe Tasks for efficient text processing
-   - Optimized for browser performance
-
-### Performance Benefits
-- No network latency for AI features
-- Works offline after initial setup
-- Enhanced privacy with local processing
-- Reduced resource usage
-
-## 🔒 Privacy & Security
-- All AI processing happens on your device
-- No data sent to external servers
-- No API keys or authentication required
-- Complete privacy for your browsing data
-
-2. Start the extension development server:
-   ```bash
-   npm run dev
-   ```
-
-3. Build the extension:
+3. **Production Build**
    ```bash
    npm run build
    ```
 
-4. Load the extension in Chrome:
-   - Open Chrome and go to `chrome://extensions`
-   - Enable "Developer mode"
+4. **Load Extension in Chrome**
+   - Open Chrome and navigate to `chrome://extensions`
+   - Enable "Developer mode" (top right toggle)
    - Click "Load unpacked" and select the `dist` folder
+   - The extension will appear in your extensions list
 
-## 🧠 AI Features
+### Development Workflow
+- **Hot Reload**: Changes to React components update automatically
+- **Background Script**: Requires extension reload for changes
+- **Content Script**: Requires page refresh for changes
 
-### Local AI Processing
-The extension uses local AI models for efficient content processing:
+## 🔧 Configuration
 
-1. **Content Summarization**
-   - Automatically extracts main content from web pages
-   - Generates concise, bullet-point summaries
-   - No external API calls needed
+### Environment Variables
+Create a `.env` file in the root directory:
+```env
+# AI API Configuration (when ready to connect)
+VITE_OPENAI_API_KEY=your_openai_key_here
+VITE_GEMINI_API_KEY=your_gemini_key_here
 
-2. **Task Suggestions**
-   - AI-powered task breakdown
-   - Resource suggestions
-   - Time estimates
-   - All computed locally
+# Backend Configuration (when ready to connect)
+VITE_API_URL=http://localhost:3001/api
+VITE_BACKEND_URL=http://localhost:3001
+```
 
-3. **Chat Interface**
-   - Context-aware responses
-   - Local model inference
-   - Privacy-preserving design
-   - Available in the extension's sidepanel
-
-2. **How It Works**
-   - Content script extracts page content
-   - Backend processes content through Gemini API
-   - Results displayed in React sidepanel UI
-   - State managed via Zustand store
-
-3. **Configuration**
-   The summarization feature can be configured in `src/store/sidePanelStore.ts`:
-   - Customize prompt templates
-   - Adjust content length limits
-   - Modify summarization style
-
-### Security Notes
-- API keys must be stored securely in backend `.env`
-- Never expose API keys in frontend code
-- Use appropriate CORS and request validation
-
-## 🔒 Permissions
+### Extension Permissions
 The extension requires these permissions:
-- `sidePanel`: For AI summary display
-- `scripting`: For content extraction
+- `storage`: For local data persistence
 - `activeTab`: For current page access
-- Network access to backend API
+- `sidePanel`: For side panel functionality
+- `contextMenus`: For right-click menu integration
+- `alarms`: For periodic sync and reminders
+- `scripting`: For content script injection
+- `tabs`: For tab management and page context
 
-3. **Extension Components**
-   - Background Service Worker
-   - Content Scripts
-   - Popup Interface
-   - Side Panel Integration
+## 🔌 Backend Integration (Ready for Implementation)
 
-4. **AI Integration Layer**
-   - Chrome Built-in AI (Gemini Nano)
-   - Custom AI Processing Pipeline
-   - Fallback Systems
+### API Endpoints (Placeholder)
+The extension is prepared for these backend endpoints:
 
-## ⭐ Features
+```typescript
+// Authentication
+POST /api/auth/login
+POST /api/auth/register
+POST /api/auth/refresh
 
-### 1. Weather Animation System
-- **Core Technology**: suncalc.js
-- **Features**:
-  - Real-time sun/moon positioning
-  - Dynamic sky gradients (dawn, day, dusk, night)
-  - Parallax cloud animations
-  - Weather condition particles
-  - Smooth state transitions
-### 2. AI-Powered Feed
-- **Core Technology**: Chrome Built-in AI
-- **Features**:
-  - Interest-based article curation
-  - AI-powered content summarization
-  - User feedback system
-  - Personalization algorithm
-  - Responsive card layout
+// Tasks
+GET /api/tasks
+POST /api/tasks
+PUT /api/tasks/:id
+DELETE /api/tasks/:id
 
-### 3. Task Management
-- **Storage**: Chrome Storage API
-- **Features**:
-  - AI task breakdown
-  - Priority management
-  - Due date tracking
-  - Google Tasks integration
-  - Drag-and-drop interface
+// Notes
+GET /api/notes
+POST /api/notes
+PUT /api/notes/:id
+DELETE /api/notes/:id
 
-### 4. Side Panel Tools
-- **Core Technology**: Chrome Side Panel API
-- **Features**:
-  - Page content extraction
-  - AI-powered summarization
-  - Context-aware chat
-  - Non-blocking UI
-
-### 5. Privacy Features
-- Local-first data storage
-- Opt-in cloud sync
-- Zero tracking policy
-- Data portability
-- Granular privacy controls
-## � Project Structure
-
-```
-root/
-├── src/
-│   ├── background/           # Extension background scripts
-│   │   └── background.ts    # Main service worker
-│   ├── components/          # React components
-│   │   ├── FeedGrid.tsx    # Article feed layout
-│   │   ├── Greeting.tsx    # User welcome component
-│   │   ├── Onboarding.tsx  # First-time setup
-│   │   ├── SettingsPanel.tsx # User preferences
-│   │   ├── TaskPanel.tsx   # Task management
-│   │   └── WeatherAnimation.tsx # Weather display
-│   ├── content/            # Content scripts
-│   │   └── contentScript.ts # Page integration
-│   ├── newtab/            # New tab page
-│   │   ├── App.tsx        # Main app component
-│   │   └── main.tsx       # Entry point
-│   ├── sidepanel/         # Side panel feature
-│   │   ├── main.tsx       # Panel entry
-│   │   └── SidePanelApp.tsx # Panel component
-│   ├── store/             # State management
-│   │   ├── appStore.ts    # Main state store
-│   │   └── sidePanelStore.ts # Panel state
-│   ├── styles/            # Global styles
-│   │   └── globals.css    # Tailwind imports
-│   └── types/             # TypeScript definitions
-├── public/               # Static assets
-│   └── icons/           # Extension icons
-├── scripts/             # Build scripts
-├── manifest.json        # Extension manifest
-├── vite.config.ts       # Build configuration
-├── tailwind.config.js   # Style configuration
-└── tsconfig.json       # TypeScript configuration
-## 🚀 Installation
-
-1. **Clone Repository**
-```bash
-git clone https://github.com/Abhidroid87/3.40.0_0.git
-cd 3.40.0_0
+// Sync
+POST /api/sync/tasks
+POST /api/sync/notes
+GET /api/sync/status
 ```
 
-2. **Install Dependencies**
-```bash
-npm install
+### Data Sync Strategy
+1. **Local First**: All operations work offline
+2. **Background Sync**: Automatic sync every 30 minutes
+3. **Conflict Resolution**: Last-write-wins with timestamp comparison
+4. **Offline Queue**: Failed syncs are queued for retry
+
+## 🤖 AI Integration (Ready for Implementation)
+
+### AI Service Integration Points
+
+1. **Content Summarization** (`src/services/apiService.ts`)
+   ```typescript
+   async summarizeContent(content: string): Promise<string>
+   ```
+
+2. **Task Generation** (`src/services/apiService.ts`)
+   ```typescript
+   async generateTaskSuggestions(input: string): Promise<string[]>
+   ```
+
+3. **Content Analysis** (`src/services/apiService.ts`)
+   ```typescript
+   async analyzeContent(content: string): Promise<{summary: string, suggestions: string[]}>
+   ```
+
+### Recommended AI Providers
+- **OpenAI GPT-4**: For general text processing and task generation
+- **Google Gemini**: For content analysis and summarization
+- **Local Models**: For privacy-focused processing
+
+### Implementation Steps
+1. Add your API keys to `.env` file
+2. Update the placeholder methods in `src/services/apiService.ts`
+3. Configure rate limiting and error handling
+4. Test with the existing UI components
+
+## 📱 Cross-Platform Sync Preparation
+
+### Data Structure
+All data is structured for easy cross-platform synchronization:
+
+```typescript
+interface SyncableData {
+  tasks: Task[];
+  notes: Note[];
+  preferences: UserPreferences;
+  lastSync: string;
+  deviceId: string;
+}
 ```
 
-3. **Development Build**
-```bash
-npm run dev
-```
+### Mobile App Integration
+- **Expo/React Native**: Shared TypeScript interfaces
+- **Firebase**: Real-time sync capabilities
+- **Offline Support**: Local storage with sync queue
 
-4. **Production Build**
-```bash
-npm run build
-```
+### Web Dashboard Integration
+- **Next.js/React**: Shared component library
+- **GraphQL API**: Efficient data fetching
+- **Real-time Updates**: WebSocket or Server-Sent Events
 
-5. **Load in Chrome**
-- Navigate to `chrome://extensions`
-- Enable "Developer mode"
-- Click "Load unpacked"
-- Select the `dist` folder
+## 🧪 Testing
 
-## 🌿 Branch Strategy
+### Manual Testing
+1. **New Tab**: Open new tab to see dashboard
+2. **Task Management**: Create, edit, and complete tasks
+3. **Notes**: Create notes and test popup on various websites
+4. **Popup Panel**: Right-click on any page → "Open Manage Tools"
+5. **Side Panel**: Click extension icon to open side panel
 
-- **main**: Production-ready code
-- **develop**: Integration branch
-- **feature/**: Feature branches
-- **bugfix/**: Bug fix branches
-- **release/**: Release preparation
+### Test Scenarios
+- Create tasks with different priorities and due dates
+- Add subtasks and track progress
+- Create notes linked to specific websites
+- Test popup functionality on YouTube, articles, etc.
+- Verify data persistence across browser sessions
 
-## 🔧 Technical Stack
+## 🔮 Future Enhancements
 
-- **Frontend**: React 18, TypeScript 5
-- **Build**: Vite 4
-- **Styling**: Tailwind CSS 3
-- **State**: Zustand 4
-- **Animation**: Framer Motion
-- **Testing**: Jest, React Testing Library
-- **API**: Chrome Extension APIs (V3)
+### Phase 1: AI Integration
+- [ ] Connect OpenAI/Gemini APIs
+- [ ] Implement content summarization
+- [ ] Add intelligent task suggestions
+- [ ] Smart content analysis
 
-## 🔌 API Integration
+### Phase 2: Backend & Sync
+- [ ] Node.js/Express backend
+- [ ] User authentication
+- [ ] Real-time data synchronization
+- [ ] Conflict resolution
 
-### Chrome APIs Used
-- Storage API
-- Tabs API
-- Scripting API
-- Side Panel API
-- Built-in AI API
+### Phase 3: Cross-Platform
+- [ ] Mobile app (Expo/React Native)
+- [ ] Web dashboard
+- [ ] Real-time collaboration
+- [ ] Advanced analytics
 
-### External APIs
-- Weather API (planned)
-- News Feed API (planned)
-- Task Sync API (planned)
+### Phase 4: Advanced Features
+- [ ] Calendar integration
+- [ ] Email integration
+- [ ] Team collaboration
+- [ ] Advanced AI workflows
 
-## ⚠️ Known Limitations
+## 🐛 Troubleshooting
 
-1. **Weather System**
-   - Currently using placeholder animations
-   - Weather API integration pending
+### Common Issues
 
-2. **Feed System**
-   - Mock data implementation
-   - Limited personalization
+1. **Extension Not Loading**
+   - Check Chrome developer mode is enabled
+   - Verify all files are in `dist` folder after build
+   - Check browser console for errors
 
-3. **AI Features**
-   - Basic implementation
-   - Limited to Chrome's AI capabilities
+2. **Data Not Persisting**
+   - Verify storage permissions in manifest
+   - Check Chrome storage quota
+   - Look for storage errors in background script console
 
-4. **Task System**
-   - Basic CRUD operations
-   - Limited sync capabilities
+3. **Popup Not Appearing**
+   - Ensure content script is injected
+   - Check for CSP restrictions on target websites
+   - Verify popup overlay z-index is sufficient
 
-## 🗺 Roadmap
+### Debug Tools
+- **Extension Console**: `chrome://extensions` → Details → Inspect views
+- **Background Script**: Inspect background page
+- **Content Script**: Use browser dev tools on target page
+- **Storage Inspector**: Chrome DevTools → Application → Storage
 
-### Phase 1 (Current)
-- [x] Basic extension structure
-- [x] Core UI components
-- [x] State management
-- [ ] Weather API integration
+## 📄 License
 
-### Phase 2 (Upcoming)
-- [ ] Real feed data integration
-- [ ] Enhanced AI capabilities
-- [ ] Full task management
-- [ ] Cloud sync features
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-### Phase 3 (Future)
-- [ ] Advanced personalization
-- [ ] Machine learning models
-- [ ] Social features
-- [ ] Analytics dashboard
-
-## 👥 Contributing
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-For detailed contribution guidelines, see CONTRIBUTING.md (upcoming).
+For major changes, please open an issue first to discuss the proposed changes.

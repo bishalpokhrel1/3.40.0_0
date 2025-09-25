@@ -1,46 +1,69 @@
-/// <reference types="chrome"/>
+/**
+ * Content script for Manage Chrome Extension
+ * Handles page interaction, content extraction, and popup injection
+ */
 
-// Content script for Manage Chrome Extension
-// Handles page content extraction and communication with the side panel
-
-// Listen for messages from the side panel
-interface ContentScriptRequest {
-  action: 'getPageContent';
-}
-
-// Send initial page content to sidepanel when loaded
-window.addEventListener('load', () => {
-  chrome.runtime.sendMessage({
-    type: 'PAGE_CONTENT',
-    text: extractPageContent()
-  });
-});
-
-// Also listen for explicit requests
-chrome.runtime.onMessage.addListener((
-  request: ContentScriptRequest,
-  _sender: chrome.runtime.MessageSender,
-  sendResponse: (response: { content: string }) => void
-) => {
-  if (request.action === 'getPageContent') {
-    const content = extractPageContent()
-    sendResponse({ content })
+// Improved message handling with better error handling
+// Listen for messages from background script
+chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+  console.log('Content script received message:', request.action);
+  
+  switch (request.action) {
+    case 'getPageContent':
+      try {
+        const content = extractPageContent();
+        sendResponse({ content });
+      } catch (error) {
+        console.error('Failed to extract content:', error);
+        sendResponse({ content: 'Failed to extract content from this page.' });
+      }
+      break;
+      
+    case 'showPopup':
+      try {
+        showManagePopup();
+        sendResponse({ success: true });
+      } catch (error) {
+        console.error('Failed to show popup:', error);
+        sendResponse({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+      }
+      break;
+      
+    case 'getPageContext':
+      try {
+        const context = getPageContext();
+        sendResponse({ context });
+      } catch (error) {
+        console.error('Failed to get page context:', error);
+        sendResponse({ context: null, error: error instanceof Error ? error.message : 'Unknown error' });
+      }
+      break;
+      
+    default:
+      console.warn('Unknown action:', request.action);
+      sendResponse({ error: 'Unknown action' });
   }
   
-  return true // Keep message channel open
-})
+  return true;
+});
 
-// Extract meaningful content from the current page
+/**
+ * Extract meaningful content from the current page
+ */
 function extractPageContent(): string {
   try {
-    // Remove script and style elements
-    const scripts = document.querySelectorAll('script, style, nav, header, footer, aside')
-    scripts.forEach(el => el.remove())
+    // Remove unwanted elements
+    const unwantedSelectors = [
+      'script', 'style', 'nav', 'header', 'footer', 'aside',
+      '.advertisement', '.ads', '.sidebar', '.menu'
+    ];
     
-    // Try to find the main content area
-    let content = ''
+    unwantedSelectors.forEach(selector => {
+      document.querySelectorAll(selector).forEach(el => el.remove());
+    });
     
-    // Look for common content selectors
+    // Try to find main content
+    let content = '';
     const contentSelectors = [
       'main',
       'article',
@@ -51,121 +74,254 @@ function extractPageContent(): string {
       '.article-content',
       '#content',
       '#main-content'
-    ]
+    ];
     
     for (const selector of contentSelectors) {
-      const element = document.querySelector(selector)
+      const element = document.querySelector(selector);
       if (element) {
-        content = element.textContent || (element as HTMLElement).innerText || ''
-        break
+        content = element.textContent || (element as HTMLElement).innerText || '';
+        break;
       }
     }
     
-    // Fallback to body content if no specific content area found
+    // Fallback to body content
     if (!content) {
-      content = document.body.textContent || document.body.innerText || ''
+      content = document.body.textContent || document.body.innerText || '';
     }
     
-    // Clean up the content
+    // Clean up content
     content = content
-      .replace(/\s+/g, ' ') // Replace multiple whitespace with single space
-      .replace(/\n+/g, ' ') // Replace newlines with spaces
-      .trim()
+      .replace(/\s+/g, ' ')
+      .replace(/\n+/g, ' ')
+      .trim();
     
-    // Limit content length for processing
+    // Limit content length
     if (content.length > 5000) {
-      content = content.substring(0, 5000) + '...'
+      content = content.substring(0, 5000) + '...';
     }
     
-    return content || 'No readable content found on this page.'
-    
+    return content || 'No readable content found on this page.';
   } catch (error) {
-    console.error('Failed to extract page content:', error)
-    return 'Failed to extract content from this page.'
+    console.error('Failed to extract page content:', error);
+    return 'Failed to extract content from this page.';
   }
 }
 
-// Extract page metadata
-function extractPageMetadata() {
-  const title = document.title || ''
-  const description = document.querySelector('meta[name="description"]')?.getAttribute('content') || ''
-  const url = window.location.href
-  const domain = window.location.hostname
-  
+/**
+ * Get context information about the current page
+ */
+function getPageContext() {
   return {
-    title,
-    description,
-    url,
-    domain
-  }
+    url: window.location.href,
+    title: document.title,
+    domain: window.location.hostname,
+    timestamp: new Date().toISOString()
+  };
 }
 
-// Highlight text on page (for future features)
-function highlightText(text: string, className: string = 'manage-highlight') {
-  try {
-    const walker = document.createTreeWalker(
-      document.body,
-      NodeFilter.SHOW_TEXT,
-      null
-    )
+/**
+ * Show the Manage popup on the current page
+ */
+function showManagePopup(): void {
+  // Check if popup already exists
+  if (document.getElementById('manage-popup-overlay')) {
+    return;
+  }
+
+  // Create popup overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'manage-popup-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  `;
+
+  // Create popup content
+  const popup = document.createElement('div');
+  popup.style.cssText = `
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    animation: slideIn 0.3s ease-out;
+  `;
+
+  popup.innerHTML = `
+    <div style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="font-size: 24px; font-weight: bold; margin: 0;">Manage Tools</h2>
+        <button id="close-popup" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px; border-radius: 8px; cursor: pointer;">
+          ✕
+        </button>
+      </div>
+      <div style="opacity: 0.9;">
+        <p style="font-weight: 500; margin: 0 0 4px 0;">${document.title}</p>
+        <p style="font-size: 14px; opacity: 0.8; margin: 0;">${window.location.hostname}</p>
+      </div>
+    </div>
     
-    const textNodes: Text[] = []
-    let node: Node | null
-    
-    while (node = walker.nextNode()) {
-      if (node.textContent && node.textContent.includes(text)) {
-        textNodes.push(node as Text)
+    <div style="padding: 24px;">
+      <div style="margin-bottom: 24px;">
+        <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px 0; color: #374151;">Quick Note</h3>
+        <textarea id="quick-note" placeholder="Write a note about this page..." style="
+          width: 100%; 
+          padding: 12px; 
+          border: 2px solid #e5e7eb; 
+          border-radius: 8px; 
+          resize: vertical; 
+          font-family: inherit;
+          min-height: 100px;
+          outline: none;
+        "></textarea>
+        <button id="save-note" style="
+          margin-top: 12px;
+          background: #3b82f6; 
+          color: white; 
+          border: none; 
+          padding: 12px 24px; 
+          border-radius: 8px; 
+          font-weight: 600; 
+          cursor: pointer;
+          width: 100%;
+        ">Save Note</button>
+      </div>
+      
+      <div style="border-top: 1px solid #e5e7eb; padding-top: 24px;">
+        <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px 0; color: #374151;">AI Tools</h3>
+        <div style="display: grid; gap: 12px;">
+          <button id="ai-summarize" style="
+            background: linear-gradient(135deg, #eff6ff, #dbeafe); 
+            border: 2px solid #bfdbfe; 
+            color: #1e40af; 
+            padding: 16px; 
+            border-radius: 12px; 
+            font-weight: 600; 
+            cursor: pointer;
+            text-align: left;
+          ">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 24px;">📄</span>
+              <div>
+                <div style="font-weight: 600;">Summarize Page</div>
+                <div style="font-size: 14px; opacity: 0.8;">Get key insights from this content</div>
+              </div>
+            </div>
+          </button>
+          
+          <button id="ai-analyze" style="
+            background: linear-gradient(135deg, #faf5ff, #f3e8ff); 
+            border: 2px solid #d8b4fe; 
+            color: #7c3aed; 
+            padding: 16px; 
+            border-radius: 12px; 
+            font-weight: 600; 
+            cursor: pointer;
+            text-align: left;
+          ">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 24px;">✨</span>
+              <div>
+                <div style="font-weight: 600;">AI Analysis</div>
+                <div style="font-size: 14px; opacity: 0.8;">Get smart suggestions and insights</div>
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Add animation styles
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
       }
     }
-    
-    textNodes.forEach(textNode => {
-      const parent = textNode.parentNode
-      if (!parent) return
-      
-      const content = textNode.textContent || ''
-      const index = content.indexOf(text)
-      
-      if (index !== -1) {
-        const beforeText = content.substring(0, index)
-        const highlightText = content.substring(index, index + text.length)
-        const afterText = content.substring(index + text.length)
-        
-        const beforeNode = document.createTextNode(beforeText)
-        const highlightNode = document.createElement('mark')
-        highlightNode.className = className
-        highlightNode.textContent = highlightText
-        const afterNode = document.createTextNode(afterText)
-        
-        parent.insertBefore(beforeNode, textNode)
-        parent.insertBefore(highlightNode, textNode)
-        parent.insertBefore(afterNode, textNode)
-        parent.removeChild(textNode)
-      }
-    })
-  } catch (error) {
-    console.error('Failed to highlight text:', error)
-  }
-}
+  `;
+  document.head.appendChild(style);
 
-// Add CSS for highlighting
-const style = document.createElement('style')
-style.textContent = `
-  .manage-highlight {
-    background-color: #ffeb3b;
-    color: #000;
-    padding: 2px 4px;
-    border-radius: 2px;
-    font-weight: bold;
-  }
-`
-document.head.appendChild(style)
+  // Event listeners
+  popup.querySelector('#close-popup')?.addEventListener('click', () => {
+    overlay.remove();
+  });
+
+  popup.querySelector('#save-note')?.addEventListener('click', async () => {
+    const noteContent = (popup.querySelector('#quick-note') as HTMLTextAreaElement)?.value;
+    if (noteContent?.trim()) {
+      try {
+        // Send note to background script for saving
+        await chrome.runtime.sendMessage({
+          action: 'saveNote',
+          note: {
+            title: document.title,
+            content: noteContent,
+            url: window.location.href,
+            domain: window.location.hostname
+          }
+        });
+        
+        // Show success feedback
+        const saveButton = popup.querySelector('#save-note') as HTMLButtonElement;
+        saveButton.textContent = 'Saved! ✓';
+        saveButton.style.background = '#10b981';
+        
+        setTimeout(() => {
+          overlay.remove();
+        }, 1000);
+      } catch (error) {
+        console.error('Failed to save note:', error);
+      }
+    }
+  });
+
+  popup.querySelector('#ai-summarize')?.addEventListener('click', () => {
+    console.log('AI Summarize clicked - placeholder');
+    // TODO: Implement AI summarization
+  });
+
+  popup.querySelector('#ai-analyze')?.addEventListener('click', () => {
+    console.log('AI Analyze clicked - placeholder');
+    // TODO: Implement AI analysis
+  });
+
+  // Close on overlay click
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.remove();
+    }
+  });
+
+  // Add to page
+  overlay.appendChild(popup);
+  document.body.appendChild(overlay);
+}
 
 // Initialize content script
-console.log('Manage content script loaded on:', window.location.href)
+console.log('Manage content script loaded on:', window.location.href);
 
-// Export functions for testing
-export {
-  extractPageContent,
-  extractPageMetadata,
-  highlightText
-}
+// Auto-send page context to background
+setTimeout(() => {
+  chrome.runtime.sendMessage({
+    action: 'pageLoaded',
+    context: getPageContext()
+  });
+}, 1000);

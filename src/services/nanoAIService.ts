@@ -1,148 +1,94 @@
-/**
- * Defines the structure for the response from our AI service.
- */
-export interface NanoAIResponse {
-  text: string;
+// Type definitions for Chrome AI API
+export interface LanguageModelOptions {
+  temperature?: number;
+  topK?: number;
+  monitor?: (event: { type: string; message: string }) => void;
 }
 
-declare global {
-  namespace chrome.ai {
-    function createTextSession(): Promise<AiTextSession>;
-  }
-}
-
-interface AiTextSession {
+export interface LanguageModelSession {
   prompt: (text: string) => Promise<string>;
 }
 
-interface GeminiAPIResponse {
-  candidates: {
-    content: {
-      parts: {
-        text: string;
-      }[];
-    };
-  }[];
+export interface LanguageModel {
+  availability: () => Promise<'ready' | 'downloadable' | 'unavailable'>;
+  create: (options?: LanguageModelOptions) => Promise<LanguageModelSession>;
 }
 
-// A variable to hold our generative AI session instance.
-// We'll initialize this once and reuse it.
-let session: AiTextSession | null = null;
-
-// Configuration for the Gemini API fallback
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
-
-// Get API key from storage
-async function getApiKey(): Promise<string> {
-  const result = await chrome.storage.sync.get('GEMINI_API_KEY');
-  if (!result.GEMINI_API_KEY) {
-    throw new Error('Gemini API key not configured. Please add it in extension settings.');
-  }
-  return result.GEMINI_API_KEY;
+export interface ChromeAI {
+  languageModel: LanguageModel;
 }
 
-/**
- * Initializes the generative AI model session.
- * It checks if the chrome.ai API is available and creates a text session.
- * This only runs once.
- */
-/**
- * Tries to use Gemini Nano if available, otherwise falls back to Gemini API
- */
-async function initializeModel() {
-  // If the session is already created, do nothing.
-  if (session) {
-    return;
-  }
-
-  // Check if Chrome Gemini Nano is available
-  if (window.chrome?.ai?.createTextSession) {
-    try {
-      session = await window.chrome.ai.createTextSession();
-      console.log('Gemini Nano session initialized successfully ✅');
-    } catch (error) {
-      console.warn('Failed to initialize Gemini Nano, falling back to remote API:', error);
-      session = null;
-    }
-  } else {
-    console.warn('Gemini Nano not available - falling back to remote API');
-    console.info('To enable Gemini Nano:');
-    console.info('1. Use Chrome Canary');
-    console.info('2. Enable #prompt-api-for-gemini-nano in chrome://flags');
-    console.info('3. Enable #optimization-guide-on-device-model in chrome://flags');
-    console.info('4. Update model in chrome://components');
+// Extend Window interface globally
+declare global {
+  interface Window {
+    readonly ai: ChromeAI;
   }
 }
 
-/**
- * Calls the remote Gemini API
- */
-async function callGeminiAPI(prompt: string): Promise<string> {
-  const apiKey = await getApiKey();
-  
-  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{
-          text: prompt
-        }]
-      }]
-    })
-  });
+// Type for AI model status
+export type AIModelStatus = 'ready' | 'downloadable' | 'unavailable' | 'checking' | 'context-error';
 
-  if (!response.ok) {
-    throw new Error(`Gemini API error: ${response.status}`);
-  }
+// Service state
 
-  const data: GeminiAPIResponse = await response.json();
-  return data.candidates[0]?.content?.parts[0]?.text || 'No response generated';
-}
-
-/**
- * Generates a response using either Gemini Nano (if available) or remote Gemini API
- *
- * @param prompt The question or instruction for the AI.
- * @returns A promise that resolves to a NanoAIResponse object.
- */
-export async function generateResponse(prompt: string): Promise<NanoAIResponse> {
-  await initializeModel();
-  
+export function checkContext(): boolean {
   try {
-    let responseText: string;
-
-    if (session) {
-      // Use Gemini Nano
-      console.log('Using Gemini Nano for response');
-      responseText = await session.prompt(prompt);
-    } else {
-      // Fall back to remote API
-      console.log('Using remote Gemini API for response');
-      responseText = await callGeminiAPI(prompt);
+    // First check if we're in an extension context
+    if (!chrome.runtime) {
+      console.error('Not running in a Chrome extension context');
+      return false;
     }
-    
-    return {
-      text: responseText,
-    };
+
+    // Check if we're in sidepanel.html
+    const url = window.location.href;
+    if (url.includes('sidepanel.html')) {
+      return true;
+    }
+
+    // Check if we're in a normal tab context
+    if (url.includes('newtab.html')) {
+      return true;
+    }
+
+    console.error(
+      'AI features are only available in the side panel or new tab page.\n' +
+      'To use AI features:\n' +
+      '1. Right-click the extension icon\n' +
+      '2. Select "Show in Side Panel"\n' +
+      '   OR\n' +
+      '3. Open a new tab to use the dashboard'
+    );
+    return false;
   } catch (error) {
-    console.error('AI response generation failed:', error);
-    throw new Error('Failed to get a response from the AI model.');
+    console.error('Error checking context:', error);
+    return false;
   }
 }
 
-/**
- * Generates a summary for a given block of content.
- *
- * @param content The text content to be summarized.
- * @returns A promise that resolves to a NanoAIResponse object containing the summary.
- */
-export async function summarizeContent(content: string): Promise<NanoAIResponse> {
-  // We can reuse the generateResponse function by creating a specific prompt for summarization.
-  const summaryPrompt = `Provide a concise summary of the following text:\n\n---\n\n${content}`;
-  
-  // Call the main generation function with our specialized prompt.
-  return generateResponse(summaryPrompt);
+export async function checkAvailability(): Promise<AIModelStatus> {
+  // Hackathon-ready: always return unavailable to force placeholder paths
+  return 'unavailable';
+}
+
+export interface AIError extends Error {
+  type: 'unavailable' | 'context' | 'initialization' | 'runtime';
+  userMessage: string;
+}
+
+export async function initializeModel(): Promise<void> {
+  // No-op for hackathon placeholder
+  return;
+}
+
+export async function generateResponse(prompt: string): Promise<string> {
+  // Return a placeholder message synchronously
+  return `AI placeholder: ${prompt.slice(0, 160)}...`;
+}
+
+export async function testConnection(): Promise<boolean> {
+  // Always succeed in hackathon mode
+  return true;
+}
+
+export function cleanup(): void {
+  // Cleanup any resources if needed
 }

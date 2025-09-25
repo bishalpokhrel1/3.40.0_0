@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { MessageSquare, FileText, Loader2, Send, Sparkles } from 'lucide-react'
-import { useSidePanelStore } from '@/store/sidePanelStore'
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MessageSquare, FileText, Loader2, Send, Sparkles, PenTool, Smartphone, Download, FolderSync as Sync } from 'lucide-react';
+import { useSidePanelStore } from '../store/sidePanelStore';
+import { useAppStore } from '../store/appStore';
+import { bridgeService } from '../services/bridgeService';
+import DiagnosticPanel from '../components/DiagnosticPanel';
+import NotesEditor from '../components/NotesEditor';
 
 function SidePanelApp() {
   const {
@@ -11,29 +15,50 @@ function SidePanelApp() {
     summarizePage,
     sendChatMessage,
     clearChat
-  } = useSidePanelStore()
+  } = useSidePanelStore();
 
-  const [chatInput, setChatInput] = useState('')
-  const [activeTab, setActiveTab] = useState<'summary' | 'chat'>('summary')
+  const { tasks, notes } = useAppStore();
+
+  const [chatInput, setChatInput] = useState('');
+  const [activeTab, setActiveTab] = useState<'summary' | 'chat' | 'notes' | 'sync' | 'diagnostics'>('summary');
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
 
   useEffect(() => {
     // Auto-summarize current page when side panel opens
-    summarizePage()
-  }, [summarizePage])
+    if (activeTab === 'summary') {
+      summarizePage();
+    }
+  }, [summarizePage, activeTab]);
 
   const handleSendMessage = async () => {
-    if (!chatInput.trim()) return
+    if (!chatInput.trim()) return;
     
-    await sendChatMessage(chatInput)
-    setChatInput('')
-  }
+    await sendChatMessage(chatInput);
+    setChatInput('');
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage()
+      e.preventDefault();
+      handleSendMessage();
     }
-  }
+  };
+
+  const handleSyncToMobile = async () => {
+    setSyncStatus('syncing');
+    
+    try {
+      await bridgeService.sendToMobile({ tasks, notes });
+      setSyncStatus('success');
+      
+      setTimeout(() => setSyncStatus('idle'), 3000);
+    } catch (error) {
+      console.error('Sync failed:', error);
+      setSyncStatus('error');
+      
+      setTimeout(() => setSyncStatus('idle'), 3000);
+    }
+  };
 
   return (
     <div className="h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col">
@@ -67,6 +92,39 @@ function SidePanelApp() {
           >
             <MessageSquare className="w-4 h-4" />
             <span>Chat</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('notes')}
+            className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'notes'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <PenTool className="w-4 h-4" />
+            <span>Notes</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('sync')}
+            className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'sync'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <Smartphone className="w-4 h-4" />
+            <span>Sync</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('diagnostics')}
+            className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'diagnostics'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Status</span>
           </button>
         </div>
       </div>
@@ -118,6 +176,114 @@ function SidePanelApp() {
                   </div>
                 )}
               </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'notes' && (
+            <motion.div
+              key="notes"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="h-full overflow-y-auto"
+            >
+              <NotesEditor />
+            </motion.div>
+          )}
+
+          {activeTab === 'sync' && (
+            <motion.div
+              key="sync"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="h-full p-4 overflow-y-auto"
+            >
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-800 mb-2">Mobile Sync</h2>
+                  <p className="text-gray-600 text-sm">
+                    Sync your tasks and notes with the mobile app
+                  </p>
+                </div>
+
+                {/* Sync Stats */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-gray-200/50">
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                    <div>
+                      <div className="text-2xl font-bold text-blue-600">{tasks.length}</div>
+                      <div className="text-sm text-gray-600">Tasks</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-yellow-600">{notes.length}</div>
+                      <div className="text-sm text-gray-600">Notes</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sync Actions */}
+                <div className="space-y-3">
+                  <motion.button
+                    onClick={handleSyncToMobile}
+                    disabled={syncStatus === 'syncing'}
+                    className="w-full p-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center space-x-2"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {syncStatus === 'syncing' ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Syncing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Smartphone className="w-5 h-5" />
+                        <span>Sync to Mobile App</span>
+                      </>
+                    )}
+                  </motion.button>
+
+                  {/* Sync Status */}
+                  {syncStatus !== 'idle' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`p-3 rounded-lg text-center ${
+                        syncStatus === 'success' ? 'bg-green-100 text-green-800' :
+                        syncStatus === 'error' ? 'bg-red-100 text-red-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}
+                    >
+                      {syncStatus === 'success' && '✅ Data sent to mobile app!'}
+                      {syncStatus === 'error' && '❌ Sync failed. Please try again.'}
+                      {syncStatus === 'syncing' && '🔄 Opening mobile app...'}
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Instructions */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-800 mb-2">How it works:</h3>
+                  <ol className="text-sm text-gray-600 space-y-1">
+                    <li>1. Click "Sync to Mobile App"</li>
+                    <li>2. A bridge page will open</li>
+                    <li>3. Your mobile app will launch automatically</li>
+                    <li>4. Data will be synced to your phone</li>
+                  </ol>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'diagnostics' && (
+            <motion.div
+              key="diagnostics"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="h-full p-4 overflow-y-auto"
+            >
+              <DiagnosticPanel />
             </motion.div>
           )}
 
@@ -209,7 +375,7 @@ function SidePanelApp() {
         </AnimatePresence>
       </div>
     </div>
-  )
+  );
 }
 
-export default SidePanelApp
+export default SidePanelApp;

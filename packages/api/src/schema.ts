@@ -1,56 +1,4 @@
 export const typeDefs = `#graphql
-  type User {
-    id: ID!
-    email: String!
-    name: String
-    preferences: UserPreferences
-    workspace: Workspace
-    googleIntegration: GoogleIntegration
-  }
-
-  type UserPreferences {
-    theme: String
-    newsCategories: [String]
-    weatherLocation: String
-    aiSettings: AISettings
-  }
-
-  type AISettings {
-    enableContentSummary: Boolean
-    enableTaskSuggestions: Boolean
-    enableSmartNotifications: Boolean
-    modelPreferences: JSON
-  }
-
-  type Workspace {
-    id: ID!
-    name: String!
-    items: [WorkspaceItem!]!
-    collections: [Collection!]!
-    tasks: [Task!]!
-    notes: [Note!]!
-    lastSynced: String
-  }
-
-  type WorkspaceItem {
-    id: ID!
-    type: String!
-    title: String!
-    url: String
-    content: String
-    tags: [String!]
-    aiSummary: String
-    createdAt: String!
-    updatedAt: String!
-  }
-
-  type Collection {
-    id: ID!
-    name: String!
-    items: [WorkspaceItem!]!
-    shared: Boolean
-  }
-
   type Task {
     id: ID!
     title: String!
@@ -59,7 +7,10 @@ export const typeDefs = `#graphql
     dueDate: String
     priority: Int
     tags: [String!]
-    aiSuggestions: [String!]
+    createdAt: String!
+    updatedAt: String!
+    deviceId: String
+    lastSyncedAt: String
   }
 
   type Note {
@@ -67,112 +18,36 @@ export const typeDefs = `#graphql
     title: String!
     content: String!
     tags: [String!]
-    aiSummary: String
-    lastEdited: String!
+    createdAt: String!
+    updatedAt: String!
+    deviceId: String
+    lastSyncedAt: String
   }
 
-  type GoogleIntegration {
-    connected: Boolean!
-    email: String
-    calendarSync: Boolean
-    driveSync: Boolean
-    gmailSync: Boolean
-    tasksSync: Boolean
-    lastSynced: String
-  }
-
-  type AuthPayload {
-    token: String!
-    user: User!
-  }
-
-  type AISuggestion {
-    type: String!
-    content: String!
-    confidence: Float!
-    metadata: JSON
+  type SyncResponse {
+    tasks: [Task!]!
+    notes: [Note!]!
+    lastSyncedAt: String!
   }
 
   type Query {
-    me: User
-    getWorkspace: Workspace!
-    getCollection(id: ID!): Collection!
-    getTasks(status: String): [Task!]!
-    getNotes(tag: String): [Note!]!
-    getAISuggestions(context: String!): [AISuggestion!]!
-    getGoogleEvents(startDate: String!, endDate: String!): [JSON!]!
-    getGoogleEmails(query: String): [JSON!]!
-    searchWorkspace(query: String!): [WorkspaceItem!]!
+    getTasks: [Task!]!
+    getTask(id: ID!): Task
+    getNotes: [Note!]!
+    getNote(id: ID!): Note
+    sync(deviceId: String!, lastSyncedAt: String): SyncResponse!
   }
 
   type Mutation {
-    signup(email: String!, password: String!, name: String): AuthPayload!
-    login(email: String!, password: String!): AuthPayload!
-    updatePreferences(input: UpdatePreferencesInput!): UserPreferences!
-    
-    # Workspace mutations
-    createWorkspaceItem(input: CreateWorkspaceItemInput!): WorkspaceItem!
-    updateWorkspaceItem(id: ID!, input: UpdateWorkspaceItemInput!): WorkspaceItem!
-    deleteWorkspaceItem(id: ID!): Boolean!
-    
-    # Collection mutations
-    createCollection(input: CreateCollectionInput!): Collection!
-    updateCollection(id: ID!, input: UpdateCollectionInput!): Collection!
-    deleteCollection(id: ID!): Boolean!
-    
-    # Task mutations
     createTask(input: CreateTaskInput!): Task!
     updateTask(id: ID!, input: UpdateTaskInput!): Task!
     deleteTask(id: ID!): Boolean!
     
-    # Note mutations
     createNote(input: CreateNoteInput!): Note!
     updateNote(id: ID!, input: UpdateNoteInput!): Note!
     deleteNote(id: ID!): Boolean!
-    
-    # Google integration
-    connectGoogle(code: String!): GoogleIntegration!
-    disconnectGoogle: Boolean!
-    syncGoogleServices: Boolean!
-  }
 
-  input UpdatePreferencesInput {
-    theme: String
-    newsCategories: [String]
-    weatherLocation: String
-    aiSettings: AISettingsInput
-  }
-
-  input AISettingsInput {
-    enableContentSummary: Boolean
-    enableTaskSuggestions: Boolean
-    enableSmartNotifications: Boolean
-    modelPreferences: JSON
-  }
-
-  input CreateWorkspaceItemInput {
-    type: String!
-    title: String!
-    url: String
-    content: String
-    tags: [String!]
-  }
-
-  input UpdateWorkspaceItemInput {
-    title: String
-    url: String
-    content: String
-    tags: [String!]
-  }
-
-  input CreateCollectionInput {
-    name: String!
-    shared: Boolean
-  }
-
-  input UpdateCollectionInput {
-    name: String
-    shared: Boolean
+    syncChanges(deviceId: String!, changes: SyncChangesInput!): SyncResponse!
   }
 
   input CreateTaskInput {
@@ -182,6 +57,7 @@ export const typeDefs = `#graphql
     dueDate: String
     priority: Int
     tags: [String!]
+    deviceId: String!
   }
 
   input UpdateTaskInput {
@@ -197,6 +73,7 @@ export const typeDefs = `#graphql
     title: String!
     content: String!
     tags: [String!]
+    deviceId: String!
   }
 
   input UpdateNoteInput {
@@ -205,5 +82,27 @@ export const typeDefs = `#graphql
     tags: [String!]
   }
 
-  scalar JSON
+  input SyncChangesInput {
+    tasks: [TaskChange!]
+    notes: [NoteChange!]
+    lastSyncedAt: String!
+  }
+
+  input TaskChange {
+    id: ID!
+    operation: ChangeOperation!
+    data: CreateTaskInput
+  }
+
+  input NoteChange {
+    id: ID!
+    operation: ChangeOperation!
+    data: CreateNoteInput
+  }
+
+  enum ChangeOperation {
+    CREATE
+    UPDATE
+    DELETE
+  }
 `;

@@ -1,40 +1,33 @@
 {
-  "name": "manage-workspace",
+  "name": "manage-extension",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "test": "turbo run test",
-    "clean": "turbo run clean",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "extension:dev": "turbo run dev --filter=@manage/extension",
-    "extension:build": "turbo run build --filter=@manage/extension",
-    "web:dev": "turbo run dev --filter=@manage/web",
-    "mobile:dev": "turbo run dev --filter=@manage/mobile",
-    "backend:dev": "turbo run dev --filter=@manage/backend"
+    "dev": "vite",
+    "build": "vite build && node scripts/build-extension.js",
+    "preview": "vite preview",
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@mediapipe/tasks-text": "^0.10.21",
-    "@tensorflow/tfjs": "^4.22.0",
+    "@firebase/auth": "^1.11.0",
+    "@google/generative-ai": "^0.24.1",
+    "@prisma/client": "^6.16.2",
     "date-fns": "^3.3.0",
+    "firebase": "^12.3.0",
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "suncalc": "^1.9.0",
+    "react-router-dom": "^7.9.2",
     "zustand": "^4.5.0"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.268",
+    "@types/node": "^24.5.2",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
-    "@types/suncalc": "^1.9.2",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "@vitejs/plugin-react": "^4.2.1",
@@ -42,8 +35,8 @@
     "eslint": "^8.56.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
-    "jest": "^29.7.0",
     "postcss": "^8.5.6",
+    "prisma": "^6.16.2",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",
     "vite": "^5.1.0"
