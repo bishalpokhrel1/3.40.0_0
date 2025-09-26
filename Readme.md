@@ -1,294 +1,156 @@
-# Manage - Personal Dashboard & Productivity Extension
+# Manage – Multi-Workspace Productivity Platform
 
-A comprehensive Chrome extension that transforms your new tab into a personalized productivity dashboard with task management, notes, and AI-powered features.
+A unified codebase that powers the Manage Chrome extension and the companion mobile application. Both workspaces share Firebase-backed data and Gemini AI helpers through a common `shared/` library.
 
-## 🌟 Features
+## Repository Layout
 
-### Dashboard (New Tab)
-- **Personalized Greeting**: Time-based greetings with user name
-- **Live Date & Time**: Real-time clock and calendar display
-- **Task Overview**: Quick view of pending and completed tasks with deadlines
-- **Notes Section**: Recent notes with quick access to full notes management
-- **AI Suggestions**: Placeholder for intelligent productivity recommendations
-
-### Task Management
-- **Hierarchical Tasks**: Main tasks with subtasks and notes
-- **Priority System**: High, medium, and low priority levels
-- **Deadline Tracking**: Due dates with overdue, today, and upcoming views
-- **Progress Tracking**: Visual progress bars for subtask completion
-- **Timeline View**: Alternative view for task planning (basic implementation)
-
-### Notes System
-- **Page-Linked Notes**: Notes automatically linked to websites/videos
-- **Rich Organization**: Tags, search, and filtering capabilities
-- **Quick Capture**: Popup panel for rapid note-taking on any website
-- **Content Linking**: Notes can reference specific URLs and domains
-
-### AI Integration (Placeholder)
-- **Content Summarization**: Ready for AI-powered page summarization
-- **Task Generation**: Prepared for intelligent task breakdown
-- **Smart Suggestions**: Framework for AI-driven productivity insights
-- **Content Analysis**: Placeholder for intelligent content insights
-
-### Popup Panel
-- **Universal Access**: Available on any website via extension icon or context menu
-- **Quick Notes**: Rapid note-taking for the current page
-- **AI Tools**: Ready-to-connect AI features for content analysis
-- **Page Context**: Automatically captures page title, URL, and domain
-
-## 🏗 Architecture
-
-### Frontend Structure
 ```
-src/
-├── components/           # React components
-│   ├── Dashboard/       # New tab dashboard components
-│   ├── Popup/          # Popup panel components
-│   ├── Tasks/          # Task management components
-│   └── Notes/          # Notes management components
-├── services/           # Business logic and API layers
-│   ├── storageService.ts    # Local storage management
-│   └── apiService.ts        # Backend API placeholders
-├── store/              # State management
-│   └── appStore.ts     # Zustand store with persistence
-├── types/              # TypeScript definitions
-├── background/         # Extension background script
-├── content/           # Content script for page interaction
-└── pages/             # Full-page components
+.
+├── extension/          # Chrome extension workspace (Vite + React)
+├── mobile/             # React Native (Expo) mobile workspace
+├── shared/             # Cross-platform Firebase, AI, and type modules
+├── packages/api/       # (Optional) Node API playground wired to shared helpers
+└── README.md
 ```
 
-### Data Flow
-1. **Local Storage**: Chrome storage API for immediate data persistence
-2. **State Management**: Zustand store with automatic persistence
-3. **Backend Sync**: Placeholder API layer ready for backend integration
-4. **Cross-Platform Prep**: Data structure designed for mobile/web sync
+Each workspace owns its dependencies, tooling, and environment files. Shared utilities are authored in TypeScript and consumed via the `@shared/*` path alias.
 
-## 🚀 Installation & Development
+## Quick Start
 
 ### Prerequisites
-- Node.js 16+ and npm
-- Chrome browser for testing
 
-### Setup
-1. **Clone and Install**
-   ```bash
-   git clone <repository-url>
-   cd manage-extension
-   npm install
-   ```
+- Node.js 18+
+- npm or yarn
+- Chrome (for the extension) and Expo Go or an emulator (for the mobile app)
 
-2. **Development Build**
-   ```bash
-   npm run dev
-   ```
+### 1. Bootstrap Firebase & Gemini Credentials
 
-3. **Production Build**
-   ```bash
-   npm run build
-   ```
+Create environment files for both workspaces using the provided templates:
 
-4. **Load Extension in Chrome**
-   - Open Chrome and navigate to `chrome://extensions`
-   - Enable "Developer mode" (top right toggle)
-   - Click "Load unpacked" and select the `dist` folder
-   - The extension will appear in your extensions list
-
-### Development Workflow
-- **Hot Reload**: Changes to React components update automatically
-- **Background Script**: Requires extension reload for changes
-- **Content Script**: Requires page refresh for changes
-
-## 🔧 Configuration
-
-### Environment Variables
-Create a `.env` file in the root directory:
-```env
-# AI API Configuration (when ready to connect)
-VITE_OPENAI_API_KEY=your_openai_key_here
-VITE_GEMINI_API_KEY=your_gemini_key_here
-
-# Backend Configuration (when ready to connect)
-VITE_API_URL=http://localhost:3001/api
-VITE_BACKEND_URL=http://localhost:3001
+```
+cp extension/.env.example extension/.env
+cp mobile/.env.example mobile/.env
 ```
 
-### Extension Permissions
-The extension requires these permissions:
-- `storage`: For local data persistence
-- `activeTab`: For current page access
-- `sidePanel`: For side panel functionality
-- `contextMenus`: For right-click menu integration
-- `alarms`: For periodic sync and reminders
-- `scripting`: For content script injection
-- `tabs`: For tab management and page context
+Populate them with your Firebase project details and a Gemini API key. The shared helpers accept both generic (`FIREBASE_API_KEY`) and Vite-prefixed (`VITE_FIREBASE_API_KEY`) keys, so you can reuse the same values in every workspace.
 
-## 🔌 Backend Integration (Ready for Implementation)
+### 2. Install Dependencies
 
-### API Endpoints (Placeholder)
-The extension is prepared for these backend endpoints:
+Workspaces manage dependencies independently:
 
-```typescript
-// Authentication
-POST /api/auth/login
-POST /api/auth/register
-POST /api/auth/refresh
+```
+cd extension
+npm install
 
-// Tasks
-GET /api/tasks
-POST /api/tasks
-PUT /api/tasks/:id
-DELETE /api/tasks/:id
-
-// Notes
-GET /api/notes
-POST /api/notes
-PUT /api/notes/:id
-DELETE /api/notes/:id
-
-// Sync
-POST /api/sync/tasks
-POST /api/sync/notes
-GET /api/sync/status
+cd ../mobile
+npm install
 ```
 
-### Data Sync Strategy
-1. **Local First**: All operations work offline
-2. **Background Sync**: Automatic sync every 30 minutes
-3. **Conflict Resolution**: Last-write-wins with timestamp comparison
-4. **Offline Queue**: Failed syncs are queued for retry
+If you plan to tinker with the sample API service:
 
-## 🤖 AI Integration (Ready for Implementation)
-
-### AI Service Integration Points
-
-1. **Content Summarization** (`src/services/apiService.ts`)
-   ```typescript
-   async summarizeContent(content: string): Promise<string>
-   ```
-
-2. **Task Generation** (`src/services/apiService.ts`)
-   ```typescript
-   async generateTaskSuggestions(input: string): Promise<string[]>
-   ```
-
-3. **Content Analysis** (`src/services/apiService.ts`)
-   ```typescript
-   async analyzeContent(content: string): Promise<{summary: string, suggestions: string[]}>
-   ```
-
-### Recommended AI Providers
-- **OpenAI GPT-4**: For general text processing and task generation
-- **Google Gemini**: For content analysis and summarization
-- **Local Models**: For privacy-focused processing
-
-### Implementation Steps
-1. Add your API keys to `.env` file
-2. Update the placeholder methods in `src/services/apiService.ts`
-3. Configure rate limiting and error handling
-4. Test with the existing UI components
-
-## 📱 Cross-Platform Sync Preparation
-
-### Data Structure
-All data is structured for easy cross-platform synchronization:
-
-```typescript
-interface SyncableData {
-  tasks: Task[];
-  notes: Note[];
-  preferences: UserPreferences;
-  lastSync: string;
-  deviceId: string;
-}
+```
+cd packages/api
+npm install
 ```
 
-### Mobile App Integration
-- **Expo/React Native**: Shared TypeScript interfaces
-- **Firebase**: Real-time sync capabilities
-- **Offline Support**: Local storage with sync queue
+### 3. Run the Chrome Extension
 
-### Web Dashboard Integration
-- **Next.js/React**: Shared component library
-- **GraphQL API**: Efficient data fetching
-- **Real-time Updates**: WebSocket or Server-Sent Events
+```
+cd extension
+npm run dev
+```
 
-## 🧪 Testing
+The development server exposes hot-reloaded entry points for the new tab, popup, background, and content scripts. Load the built extension by running `npm run build`, then selecting the generated `extension/dist` folder inside `chrome://extensions`.
 
-### Manual Testing
-1. **New Tab**: Open new tab to see dashboard
-2. **Task Management**: Create, edit, and complete tasks
-3. **Notes**: Create notes and test popup on various websites
-4. **Popup Panel**: Right-click on any page → "Open Manage Tools"
-5. **Side Panel**: Click extension icon to open side panel
+### 4. Run the Mobile App (Expo)
 
-### Test Scenarios
-- Create tasks with different priorities and due dates
-- Add subtasks and track progress
-- Create notes linked to specific websites
-- Test popup functionality on YouTube, articles, etc.
-- Verify data persistence across browser sessions
+```
+cd mobile
+npm start
+```
 
-## 🔮 Future Enhancements
+Metro will start with shared sources whitelisted via `metro.config.js`. Scan the QR code with Expo Go or launch the Android/iOS simulator from the CLI.
 
-### Phase 1: AI Integration
-- [ ] Connect OpenAI/Gemini APIs
-- [ ] Implement content summarization
-- [ ] Add intelligent task suggestions
-- [ ] Smart content analysis
+## Shared Modules
 
-### Phase 2: Backend & Sync
-- [ ] Node.js/Express backend
-- [ ] User authentication
-- [ ] Real-time data synchronization
-- [ ] Conflict resolution
+- **`shared/firebase`** – Idempotent Firebase initialisation, Firestore helpers, and collection constants. Used by both the extension and mobile sync service.
+- **`shared/ai/gemini`** – A thin wrapper around `@google/generative-ai` that standardises prompts and responses for future AI features.
+- **`shared/types`** – Canonical TypeScript entities (`Task`, `Note`, `TransferData`, etc.) with identical shapes across workspaces.
+- **`shared/utils/env`** – Environment helpers that reconcile Vite, Node, and Expo configuration sources.
 
-### Phase 3: Cross-Platform
-- [ ] Mobile app (Expo/React Native)
-- [ ] Web dashboard
-- [ ] Real-time collaboration
-- [ ] Advanced analytics
+Import shared modules with `@shared/...`. Examples:
 
-### Phase 4: Advanced Features
-- [ ] Calendar integration
-- [ ] Email integration
-- [ ] Team collaboration
-- [ ] Advanced AI workflows
+```ts
+import { initializeFirebase } from '@shared/firebase';
+import { createGeminiClient } from '@shared/ai/gemini';
+import type { Task } from '@shared/types';
+```
 
-## 🐛 Troubleshooting
+## Firebase & Sync Pipeline
 
-### Common Issues
+1. **Configuration** – `shared/utils/env` reads Firebase keys from `.env` files (supporting both generic and Vite-prefixed names).
+2. **Initialisation** – `initializeFirebase` lazily boots the SDK and caches the app/auth/database trio.
+3. **Extension Usage** – `extension/src/services/firebaseConfig.ts` now imports the shared helper, preserving existing UI logic.
+4. **Mobile Usage** – `mobile/src/config/environment.ts` bridges Expo `extra` values into the shared helpers. `syncService.pushSnapshotToCloud` illustrates how to push merged data to Firestore.
+5. **Backend (optional)** – `packages/api/src/firebase.ts` reuses the same helper for server-side interactions.
 
-1. **Extension Not Loading**
-   - Check Chrome developer mode is enabled
-   - Verify all files are in `dist` folder after build
-   - Check browser console for errors
+## Gemini Integration Stubs
 
-2. **Data Not Persisting**
-   - Verify storage permissions in manifest
-   - Check Chrome storage quota
-   - Look for storage errors in background script console
+- Centralised client factory in `shared/ai/gemini.ts` with `generate` and `summarize` helpers.
+- Extension service `geminiService.ts` consumes the shared client without altering UI contracts.
+- Mobile exposes `aiService.ts` for future AI-powered suggestions and summaries. Screens can await these helpers once credentials are supplied.
 
-3. **Popup Not Appearing**
-   - Ensure content script is injected
-   - Check for CSP restrictions on target websites
-   - Verify popup overlay z-index is sufficient
+Add your Gemini key to both `.env` files and the shared wrapper becomes operational instantly.
 
-### Debug Tools
-- **Extension Console**: `chrome://extensions` → Details → Inspect views
-- **Background Script**: Inspect background page
-- **Content Script**: Use browser dev tools on target page
-- **Storage Inspector**: Chrome DevTools → Application → Storage
+## Workspace Notes
 
-## 📄 License
+### Extension (`extension/`)
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+- Tooling: Vite, React, TypeScript, Tailwind.
+- Scripts: `npm run dev`, `npm run build`, `npm run lint`, `npm run type-check`.
+- Environment: `.env` (values with `VITE_` prefix). Additional allowlist added in `vite.config.ts` so imports from `../shared` resolve safely.
 
-## 🤝 Contributing
+### Mobile (`mobile/`)
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+- Tooling: Expo SDK 49, React Navigation, AsyncStorage.
+- New files: `metro.config.js`, `babel.config.js`, `tsconfig.json`, `app.config.js`, and platform stubs under `android/` and `ios/`.
+- Shared bootstrap: importing `./src/config/environment` in `App.tsx` ensures Firebase/Gemini are initialised before any components render.
 
-For major changes, please open an issue first to discuss the proposed changes.
+### Shared (`shared/`)
+
+- All modules are TypeScript-first and shipped without build output. Both Vite and Metro compile them on demand.
+- A quick tour is available in `shared/README.md`.
+
+### API Playground (`packages/api/`)
+
+- Optional Node Apollo/Express prototype updated to use shared Firebase helpers.
+- Run with `npm run dev` after installing dependencies.
+
+## Environment Reference
+
+| Variable | Description | Extension | Mobile |
+|----------|-------------|-----------|--------|
+| `FIREBASE_API_KEY` / `VITE_FIREBASE_API_KEY` | Firebase Web API key | ✅ | ✅ |
+| `FIREBASE_AUTH_DOMAIN` / `VITE_FIREBASE_AUTH_DOMAIN` | Auth domain | ✅ | ✅ |
+| `FIREBASE_PROJECT_ID` / `VITE_FIREBASE_PROJECT_ID` | Project identifier | ✅ | ✅ |
+| `FIREBASE_STORAGE_BUCKET` / `VITE_FIREBASE_STORAGE_BUCKET` | Storage bucket | ✅ | ✅ |
+| `FIREBASE_MESSAGING_SENDER_ID` / `VITE_FIREBASE_MESSAGING_SENDER_ID` | Sender ID | ✅ | ✅ |
+| `FIREBASE_APP_ID` / `VITE_FIREBASE_APP_ID` | App ID | ✅ | ✅ |
+| `GEMINI_API_KEY` / `VITE_GEMINI_API_KEY` | Google AI key | ✅ | ✅ |
+| `GEMINI_MODEL` / `VITE_GEMINI_MODEL` | Default Gemini model | optional | optional |
+
+Expo’s `app.config.js` copies the mobile `.env` values into `Constants.expoConfig.extra`, which is then bridged into the shared environment helper.
+
+## Development Tips
+
+- **Chrome Extension** – Re-run `npm run build` before loading into Chrome. During development, `npm run dev` exposes HMR endpoints but still requires `chrome://extensions` for final verification.
+- **Expo App** – The Metro config already whitelists `../shared`, but if you add new directories outside `mobile/`, append them to `watchFolders`.
+- **Shared Changes** – Because both workspaces compile shared TypeScript directly, edits apply instantly without a separate build step.
+
+## Next Steps
+
+- Implement authenticated user flows and Firestore security rules.
+- Expand the shared AI layer with prompt templates and caching.
+- Add automated tests (`vitest` for extension, `jest` for mobile) that exercise the shared modules end-to-end.
+
+Enjoy building across browser and mobile with a single, cohesive workspace! If you add new shared utilities, document them in `shared/README.md` and update the table above so every platform stays aligned.

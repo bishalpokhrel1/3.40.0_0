@@ -30,12 +30,26 @@ export const typeDefs = `#graphql
     lastSyncedAt: String!
   }
 
+  type AIResponse {
+    text: String!
+    tokens: Int!
+  }
+
+  type AIAnalysis {
+    summary: String!
+    suggestions: [String!]!
+  }
+
   type Query {
     getTasks: [Task!]!
     getTask(id: ID!): Task
     getNotes: [Note!]!
     getNote(id: ID!): Note
     sync(deviceId: String!, lastSyncedAt: String): SyncResponse!
+    aiSummarize(content: String!): AIResponse!
+    aiGenerate(input: String!, context: String): AIResponse!
+    aiTaskSuggestions(input: String!): [String!]!
+    aiAnalyze(content: String!): AIAnalysis!
   }
 
   type Mutation {

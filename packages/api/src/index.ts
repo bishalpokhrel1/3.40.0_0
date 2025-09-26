@@ -1,10 +1,11 @@
+import 'dotenv/config';
 import { ApolloServer } from '@apollo/server';
 import { BaseContext } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
-import * as express from 'express';
-import * as http from 'http';
-import * as cors from 'cors';
+import express from 'express';
+import http from 'http';
+import cors from 'cors';
 import { typeDefs } from './schema';
 import { resolvers } from './resolvers';
 
@@ -28,7 +29,7 @@ const server = new ApolloServer<MyContext>({
   // Configure CORS to allow requests from extension, web app, and mobile app
   app.use(
     '/graphql',
-    cors<cors.CorsRequest>({
+  cors({
       origin: [
         'chrome-extension://*',  // Chrome extension
         'http://localhost:3000', // Web development
