@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # Manage – Multi-Workspace Productivity Platform
+=======
+# Meraki - Personal Dashboard & Productivity Extension
+>>>>>>> b1718923ca32fe5b9debe28414d3f8bb55644c86
 
 A unified codebase that powers the Manage Chrome extension and the companion mobile application. Both workspaces share Firebase-backed data and Gemini AI helpers through a common `shared/` library.
 
@@ -116,6 +120,7 @@ Add your Gemini key to both `.env` files and the shared wrapper becomes operatio
 - New files: `metro.config.js`, `babel.config.js`, `tsconfig.json`, `app.config.js`, and platform stubs under `android/` and `ios/`.
 - Shared bootstrap: importing `./src/config/environment` in `App.tsx` ensures Firebase/Gemini are initialised before any components render.
 
+<<<<<<< HEAD
 ### Shared (`shared/`)
 
 - All modules are TypeScript-first and shipped without build output. Both Vite and Metro compile them on demand.
@@ -154,3 +159,6 @@ Expo’s `app.config.js` copies the mobile `.env` values into `Constants.expoCon
 - Add automated tests (`vitest` for extension, `jest` for mobile) that exercise the shared modules end-to-end.
 
 Enjoy building across browser and mobile with a single, cohesive workspace! If you add new shared utilities, document them in `shared/README.md` and update the table above so every platform stays aligned.
+=======
+For major changes, please open an issue first to discuss the proposed changes.
+>>>>>>> b1718923ca32fe5b9debe28414d3f8bb55644c86
