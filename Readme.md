@@ -1,4 +1,4 @@
-# Manage - Personal Dashboard & Productivity Extension
+# Meraki - Personal Dashboard & Productivity Extension
 
 A comprehensive Chrome extension that transforms your new tab into a personalized productivity dashboard with task management, notes, and AI-powered features.
 
