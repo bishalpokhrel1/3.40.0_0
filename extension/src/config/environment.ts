@@ -1,6 +1,6 @@
-import { buildFirebaseConfigFromEnv, buildGeminiConfigFromEnv, readApiBaseUrlFromEnv } from '@shared/utils/env';
-import type { FirebaseConfig } from '@shared/firebase';
-import type { GeminiConfig } from '@shared/ai/gemini';
+import { buildFirebaseConfigFromEnv, buildGeminiConfigFromEnv, readApiBaseUrlFromEnv } from '../../../shared/utils/env.ts';
+import type { FirebaseConfig } from '../../../shared/firebase';
+import type { GeminiConfig } from '../../../shared/ai/gemini';
 
 export interface EnvironmentConfig {
   firebase: FirebaseConfig;

@@ -35,3 +35,9 @@ exports.COLLECTIONS = {
 function getCollectionName(collection) {
     return collection;
 }
+
+module.exports = {
+    initializeFirebase,
+    getCollectionName,
+    COLLECTIONS
+};

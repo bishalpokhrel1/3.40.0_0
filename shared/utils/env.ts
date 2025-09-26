@@ -8,34 +8,29 @@ declare global {
   var __APP_ENV__: EnvRecord | undefined;
 }
 
-const gatherSources = (): EnvRecord[] => {
-  const sources: EnvRecord[] = [];
-
-  if (typeof process !== 'undefined' && typeof process.env !== 'undefined') {
-    sources.push(process.env as EnvRecord);
+const getEnvValue = (key: string, prefix = ''): string | undefined => {
+  const fullKey = prefix ? `${prefix}_${key}` : key;
+  const viteKey = `VITE_${fullKey}`;
+  
+  // Check process.env
+  if (typeof process !== 'undefined' && process.env) {
+    if (process.env[fullKey]) return process.env[fullKey];
+    if (process.env[viteKey]) return process.env[viteKey];
   }
-
-  // `import.meta` is only available in ESM environments (Vite / extension build)
+  
+  // Check import.meta.env (Vite)
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const metaEnv = (import.meta as any)?.env as EnvRecord | undefined;
-    if (metaEnv) {
-      sources.push(metaEnv);
-    }
-  } catch (error) {
-    // ignore: `import.meta` not supported in this runtime (e.g., React Native)
+    const metaEnv = import.meta?.env;
+    if (metaEnv?.[fullKey]) return metaEnv[fullKey];
+    if (metaEnv?.[viteKey]) return metaEnv[viteKey];
+  } catch {
+    // ignore if import.meta is not available
   }
-
-  if (typeof globalThis !== 'undefined' && globalThis.__APP_ENV__) {
-    sources.push(globalThis.__APP_ENV__);
-  }
-
-  return sources;
+  
+  return undefined;
 };
 
-const ENV_SOURCES = gatherSources();
-
-export const ENV_KEYS = {
+const ENV_KEYS = {
   FIREBASE: {
     API_KEY: 'FIREBASE_API_KEY',
     AUTH_DOMAIN: 'FIREBASE_AUTH_DOMAIN',
@@ -48,6 +43,32 @@ export const ENV_KEYS = {
     API_KEY: 'GEMINI_API_KEY',
     MODEL: 'GEMINI_MODEL'
   },
+  API: {
+    BASE_URL: 'API_BASE_URL'
+  }
+};
+
+export const buildFirebaseConfigFromEnv = (): FirebaseConfig => {
+  return {
+    apiKey: getEnvValue(ENV_KEYS.FIREBASE.API_KEY) || '',
+    authDomain: getEnvValue(ENV_KEYS.FIREBASE.AUTH_DOMAIN) || '',
+    projectId: getEnvValue(ENV_KEYS.FIREBASE.PROJECT_ID) || '',
+    storageBucket: getEnvValue(ENV_KEYS.FIREBASE.STORAGE_BUCKET) || '',
+    messagingSenderId: getEnvValue(ENV_KEYS.FIREBASE.MESSAGING_SENDER_ID) || '',
+    appId: getEnvValue(ENV_KEYS.FIREBASE.APP_ID) || ''
+  };
+};
+
+export const buildGeminiConfigFromEnv = (): GeminiConfig => {
+  return {
+    apiKey: getEnvValue(ENV_KEYS.GEMINI.API_KEY) || '',
+    model: getEnvValue(ENV_KEYS.GEMINI.MODEL) || 'gemini-pro'
+  };
+};
+
+export const readApiBaseUrlFromEnv = (): string => {
+  return getEnvValue(ENV_KEYS.API.BASE_URL) || 'http://localhost:4000'
+};
   API: {
     BASE_URL: 'API_BASE_URL'
   }
