@@ -1,18 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User, LogOut } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import ThemeToggle from "./ThemeToggle";
 
-interface NavigationProps {
-  isAuthenticated: boolean;
-  user: any;
-  onSignIn: () => void;
-  onGetStarted: () => void;
-  onSignOut: () => void;
-}
-
-const Navigation = ({ isAuthenticated, user, onSignIn, onGetStarted, onSignOut }: NavigationProps) => {
+const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, isAuthenticated, signInWithGoogle, signOut, loading } = useAuth();
 
   const navItems = [
     { name: 'Home', href: '#home' },
@@ -21,6 +15,24 @@ const Navigation = ({ isAuthenticated, user, onSignIn, onGetStarted, onSignOut }
     { name: 'Mobile', href: '#mobile' },
     { name: 'Dashboard', href: '#dashboard' }
   ];
+
+  const handleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+      // Redirect to dashboard after successful login
+      window.location.href = '/dashboard';
+    } catch (error) {
+      console.error('Sign in failed:', error);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Sign out failed:', error);
+    }
+  };
 
   return (
     <nav className="glass-nav fixed top-0 w-full z-50 animate-slide-up">
@@ -52,22 +64,38 @@ const Navigation = ({ isAuthenticated, user, onSignIn, onGetStarted, onSignOut }
               <ThemeToggle />
               {isAuthenticated ? (
                 <>
-                  <span className="text-sm text-muted-foreground">
-                    {user?.email ?? 'Signed in'}
-                  </span>
-                  <Button variant="ghost" size="sm" onClick={onSignOut} className="micro-bounce">
+                  <div className="flex items-center space-x-2">
+                    <User className="w-4 h-4" />
+                    <span className="text-sm">{user?.displayName || user?.email}</span>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleSignOut}
+                    className="micro-bounce"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
-                  </Button>
-                  <Button variant="hero" size="sm" onClick={onGetStarted} className="micro-bounce">
-                    Dashboard
                   </Button>
                 </>
               ) : (
                 <>
-                  <Button variant="ghost" size="sm" onClick={onSignIn} className="micro-bounce">
-                    Sign In
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleSignIn}
+                    disabled={loading}
+                    className="micro-bounce"
+                  >
+                    {loading ? 'Loading...' : 'Sign In'}
                   </Button>
-                  <Button variant="hero" size="sm" onClick={onGetStarted} className="micro-bounce">
+                  <Button 
+                    variant="hero" 
+                    size="sm" 
+                    onClick={handleSignIn}
+                    disabled={loading}
+                    className="micro-bounce"
+                  >
                     Get Started Free
                   </Button>
                 </>
@@ -107,22 +135,38 @@ const Navigation = ({ isAuthenticated, user, onSignIn, onGetStarted, onSignOut }
                 </div>
                 {isAuthenticated ? (
                   <>
-                    <span className="text-sm text-muted-foreground text-center block">
-                      {user?.email ?? 'Signed in'}
-                    </span>
-                    <Button variant="ghost" size="sm" onClick={onSignOut} className="w-full micro-bounce">
+                    <div className="flex items-center justify-center space-x-2 py-2">
+                      <User className="w-4 h-4" />
+                      <span className="text-sm">{user?.displayName || user?.email}</span>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={handleSignOut}
+                      className="w-full micro-bounce"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
                       Sign Out
-                    </Button>
-                    <Button variant="hero" size="sm" onClick={onGetStarted} className="w-full micro-bounce">
-                      Dashboard
                     </Button>
                   </>
                 ) : (
                   <>
-                    <Button variant="ghost" size="sm" onClick={onSignIn} className="w-full micro-bounce">
-                      Sign In
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={handleSignIn}
+                      disabled={loading}
+                      className="w-full micro-bounce"
+                    >
+                      {loading ? 'Loading...' : 'Sign In'}
                     </Button>
-                    <Button variant="hero" size="sm" onClick={onGetStarted} className="w-full micro-bounce">
+                    <Button 
+                      variant="hero" 
+                      size="sm" 
+                      onClick={handleSignIn}
+                      disabled={loading}
+                      className="w-full micro-bounce"
+                    >
                       Get Started Free
                     </Button>
                   </>

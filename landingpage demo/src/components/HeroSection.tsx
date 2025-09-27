@@ -1,8 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Play, ArrowRight } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import heroMockup from "@/assets/hero-mockup.jpg";
 
 const HeroSection = () => {
+  const { signInWithGoogle, loading } = useAuth();
+
+  const handleGetStarted = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error('Sign in failed:', error);
+    }
+  };
+
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
       {/* Animated Background Elements */}
@@ -30,8 +41,14 @@ const HeroSection = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-12">
-              <Button variant="hero" size="lg" className="animate-glow-pulse micro-bounce">
-                Get Started Free
+              <Button 
+                variant="hero" 
+                size="lg" 
+                onClick={handleGetStarted}
+                disabled={loading}
+                className="animate-glow-pulse micro-bounce"
+              >
+                {loading ? 'Signing in...' : 'Get Started Free'}
                 <ArrowRight className="ml-2" />
               </Button>
               <Button variant="glass-outline" size="lg" className="group micro-bounce">

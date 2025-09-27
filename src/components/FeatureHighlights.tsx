@@ -89,4 +89,3 @@ const FeatureHighlights = () => {
 };
 
 export default FeatureHighlights;
-

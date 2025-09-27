@@ -21,22 +21,16 @@ export default defineConfig({
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]'
-      },
-      external: (id) => {
-        // Don't bundle these for background script
-        if (id.includes('firebase') || id.includes('zustand')) {
-          return false;
-        }
-        return false;
       }
-    },
-    modulePreload: false,
-    cssCodeSplit: false,
-    sourcemap: false,
-    minify: false
+    }
   },
   server: {
     port: 3000,
     open: false
+  },
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src')
+    }
   }
 });

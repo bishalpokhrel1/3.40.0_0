@@ -1,14 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { Play, ArrowRight } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import heroMockup from "@/assets/hero-mockup.jpg";
 
-interface HeroSectionProps {
-  onGetStarted: () => void;
-  onSignIn: () => void;
-  isAuthenticated: boolean;
-}
+const HeroSection = () => {
+  const { signInWithGoogle, loading } = useAuth();
 
-const HeroSection = ({ onGetStarted, onSignIn, isAuthenticated }: HeroSectionProps) => {
+  const handleGetStarted = async () => {
+    try {
+      await signInWithGoogle();
+      // Redirect to dashboard after successful login
+      window.location.href = '/dashboard';
+    } catch (error) {
+      console.error('Sign in failed:', error);
+    }
+  };
+
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
       {/* Animated Background Elements */}
@@ -39,23 +46,17 @@ const HeroSection = ({ onGetStarted, onSignIn, isAuthenticated }: HeroSectionPro
               <Button 
                 variant="hero" 
                 size="lg" 
+                onClick={handleGetStarted}
+                disabled={loading}
                 className="animate-glow-pulse micro-bounce"
-                onClick={onGetStarted}
               >
-                {isAuthenticated ? 'Go to Dashboard' : 'Get Started Free'}
+                {loading ? 'Signing in...' : 'Get Started Free'}
                 <ArrowRight className="ml-2" />
               </Button>
-              {!isAuthenticated && (
-                <Button 
-                  variant="glass-outline" 
-                  size="lg" 
-                  className="group micro-bounce"
-                  onClick={onSignIn}
-                >
-                  <Play className="mr-2 group-hover:scale-110 transition-transform" />
-                  Sign In
-                </Button>
-              )}
+              <Button variant="glass-outline" size="lg" className="group micro-bounce">
+                <Play className="mr-2 group-hover:scale-110 transition-transform" />
+                See How It Works
+              </Button>
             </div>
 
             {/* Trust Indicators */}

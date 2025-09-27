@@ -8,6 +8,8 @@ const FinalCTA = () => {
   const handleGetStarted = async () => {
     try {
       await signInWithGoogle();
+      // Redirect to dashboard after successful login
+      window.location.href = '/dashboard';
     } catch (error) {
       console.error('Sign in failed:', error);
     }
