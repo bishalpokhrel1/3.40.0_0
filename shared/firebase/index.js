@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.COLLECTIONS = void 0;
+exports.isFirebaseConfigValid = exports.COLLECTIONS = void 0;
 exports.initializeFirebase = initializeFirebase;
 exports.getCollectionName = getCollectionName;
 const app_1 = require("firebase/app");
@@ -35,9 +35,14 @@ exports.COLLECTIONS = {
 function getCollectionName(collection) {
     return collection;
 }
-
-module.exports = {
-    initializeFirebase,
-    getCollectionName,
-    COLLECTIONS
-};
+const requiredKeys = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+function isFirebaseConfigValid(config) {
+    if (!config) {
+        return false;
+    }
+    return requiredKeys.every((key) => {
+        const value = config[key];
+        return typeof value === 'string' && value.trim().length > 0;
+    });
+}
+exports.isFirebaseConfigValid = isFirebaseConfigValid;

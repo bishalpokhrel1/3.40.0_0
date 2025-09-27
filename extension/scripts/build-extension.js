@@ -19,6 +19,7 @@ if (!manifest.background) {
   manifest.background = {};
 }
 manifest.background.service_worker = 'background.js';
+manifest.background.type = 'module';
 
 if (!manifest.content_scripts) {
   manifest.content_scripts = [{ matches: ['<all_urls>'] }];
@@ -27,6 +28,15 @@ if (!manifest.content_scripts[0]) {
   manifest.content_scripts[0] = { matches: ['<all_urls>'] };
 }
 manifest.content_scripts[0].js = ['contentScript.js'];
+
+// Update HTML file references
+manifest.chrome_url_overrides = {
+  newtab: 'newtab.html'
+};
+
+manifest.side_panel = {
+  default_path: 'sidepanel.html'
+};
 
 // Write updated manifest
 fs.writeFileSync(
@@ -56,6 +66,19 @@ const copyDirectory = (source, destination) => {
 
 if (fs.existsSync(publicDir)) {
   copyDirectory(publicDir, distDir);
+}
+
+// Copy simple background script if the built one has issues
+const simpleBackgroundPath = path.resolve(rootDir, 'src/background/background-simple.js');
+const distBackgroundPath = path.resolve(distDir, 'background.js');
+
+if (fs.existsSync(simpleBackgroundPath)) {
+  // Check if the built background.js has import issues
+  const builtBackground = fs.readFileSync(distBackgroundPath, 'utf8');
+  if (builtBackground.includes('import') && builtBackground.includes('from')) {
+    console.log('Replacing background.js with simple version');
+    fs.copyFileSync(simpleBackgroundPath, distBackgroundPath);
+  }
 }
 
 console.log('Extension build completed!');

@@ -13,12 +13,14 @@ interface AppState {
 
   // Authentication actions
   initializeAuth: () => void;
+  initializeApp: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 
   // User preferences
   preferences: UserPreferences;
+  loadPreferences: () => Promise<void>;
   
   // Tasks
   tasks: Task[];
@@ -35,6 +37,10 @@ interface AppState {
     title: string;
     domain: string;
   } | null;
+
+  // Onboarding
+  hasCompletedOnboarding: boolean;
+  completeOnboarding: () => void;
   
   // Actions
   setPreferences: (preferences: Partial<UserPreferences>) => void;
@@ -78,6 +84,15 @@ export const useAppStore = create<AppState>()(
             authLoading: false
           });
         });
+      },
+
+      initializeApp: async () => {
+        get().initializeAuth();
+        await Promise.allSettled([
+          get().loadPreferences(),
+          get().loadTasks(),
+          get().loadNotes()
+        ]);
       },
 
       signIn: async (email: string, password: string) => {
@@ -134,12 +149,19 @@ export const useAppStore = create<AppState>()(
           showAISuggestions: true
         }
       },
+      loadPreferences: async () => {
+        const preferences = await storageService.getPreferences();
+        set({ preferences });
+      },
       tasks: [],
       tasksLoading: false,
       notes: [],
       notesLoading: false,
       showPopup: false,
       currentPageContext: null,
+
+      hasCompletedOnboarding: false,
+      completeOnboarding: () => set({ hasCompletedOnboarding: true }),
 
       // Preferences
       setPreferences: (newPreferences) => {
@@ -285,7 +307,8 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         preferences: state.preferences,
         tasks: state.tasks,
-        notes: state.notes
+        notes: state.notes,
+        hasCompletedOnboarding: state.hasCompletedOnboarding
       })
     }
   )

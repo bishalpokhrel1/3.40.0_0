@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { authService } from '../services/authService';
+import { firebaseStatus } from '../services/firebaseConfig';
 
 interface AuthFormProps {
   mode: 'signin' | 'signup';
@@ -12,9 +13,16 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode, onSuccess, onError }) 
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const firebaseReady = firebaseStatus.ready;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!firebaseReady) {
+      setError('Authentication is unavailable because Firebase credentials are not configured.');
+      onError?.(new Error('Firebase not configured'));
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -35,6 +43,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode, onSuccess, onError }) 
   };
 
   const handleGoogleSignIn = async () => {
+    if (!firebaseReady) {
+      setError('Authentication is unavailable because Firebase credentials are not configured.');
+      onError?.(new Error('Firebase not configured'));
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -56,9 +70,9 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode, onSuccess, onError }) 
         {mode === 'signin' ? 'Sign In' : 'Sign Up'}
       </h2>
 
-      {error && (
+      {(!firebaseReady || error) && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
+          {firebaseReady ? error : 'Firebase credentials are missing. Add them to .env to enable sign-in.'}
         </div>
       )}
 
@@ -71,6 +85,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode, onSuccess, onError }) 
             onChange={(e) => setEmail(e.target.value)}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
             required
+            disabled={loading || !firebaseReady}
           />
         </div>
 
@@ -82,12 +97,13 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode, onSuccess, onError }) 
             onChange={(e) => setPassword(e.target.value)}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
             required
+            disabled={loading || !firebaseReady}
           />
         </div>
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !firebaseReady}
           className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 disabled:opacity-50"
         >
           {loading ? 'Loading...' : mode === 'signin' ? 'Sign In' : 'Sign Up'}
@@ -103,7 +119,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode, onSuccess, onError }) 
         <button
           type="button"
           onClick={handleGoogleSignIn}
-          disabled={loading}
+          disabled={loading || !firebaseReady}
           className="w-full bg-white border border-gray-300 text-gray-700 py-2 rounded hover:bg-gray-50 disabled:opacity-50 flex items-center justify-center gap-2"
         >
           <img

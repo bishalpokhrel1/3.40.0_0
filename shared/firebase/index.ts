@@ -53,3 +53,23 @@ type CollectionKeys = typeof COLLECTIONS[keyof typeof COLLECTIONS];
 export function getCollectionName(collection: CollectionKeys): string {
   return collection;
 }
+
+export function isFirebaseConfigValid(config: FirebaseConfig): boolean {
+  if (!config) {
+    return false;
+  }
+
+  const requiredKeys: Array<keyof FirebaseConfig> = [
+    'apiKey',
+    'authDomain',
+    'projectId',
+    'storageBucket',
+    'messagingSenderId',
+    'appId'
+  ];
+
+  return requiredKeys.every((key) => {
+    const value = config[key];
+    return typeof value === 'string' && value.trim().length > 0;
+  });
+}

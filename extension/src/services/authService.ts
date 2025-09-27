@@ -1,13 +1,15 @@
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signOut,
+  signOut as firebaseSignOut,
   onAuthStateChanged,
   User,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  type Auth
 } from 'firebase/auth';
-import { auth } from './firebaseConfig';
+import { auth, firebaseStatus } from './firebaseConfig';
+import { ensureUserProfile } from './profileService';
 
 export interface AuthService {
   user: User | null;
@@ -22,45 +24,83 @@ export interface AuthService {
 class FirebaseAuthService implements AuthService {
   private _user: User | null = null;
 
+  constructor(private readonly authInstance: Auth) {
+    onAuthStateChanged(this.authInstance, (user) => {
+      this._user = user;
+      if (user) {
+        void ensureUserProfile(user);
+      }
+    });
+  }
+
   get user() {
     return this._user;
   }
 
-  constructor() {
-    // Initialize auth state
-    onAuthStateChanged(auth, (user) => {
-      this._user = user;
-    });
-  }
-
   async signUp(email: string, password: string): Promise<User> {
-    const { user } = await createUserWithEmailAndPassword(auth, email, password);
+    const { user } = await createUserWithEmailAndPassword(this.authInstance, email, password);
+    await ensureUserProfile(user);
     return user;
   }
 
   async signIn(email: string, password: string): Promise<User> {
-    const { user } = await signInWithEmailAndPassword(auth, email, password);
+    const { user } = await signInWithEmailAndPassword(this.authInstance, email, password);
+    await ensureUserProfile(user);
     return user;
   }
 
   async signInWithGoogle(): Promise<User> {
     const provider = new GoogleAuthProvider();
-    const { user } = await signInWithPopup(auth, provider);
+    const { user } = await signInWithPopup(this.authInstance, provider);
+    await ensureUserProfile(user);
     return user;
   }
 
   async signOut(): Promise<void> {
-    await signOut(auth);
+    await firebaseSignOut(this.authInstance);
   }
 
   getCurrentUser(): User | null {
-    return auth.currentUser;
+    return this.authInstance.currentUser ?? null;
   }
 
   onAuthStateChange(callback: (user: User | null) => void) {
-    return onAuthStateChanged(auth, callback);
+    return onAuthStateChanged(this.authInstance, callback);
+  }
+}
+
+class DisabledAuthService implements AuthService {
+  user: User | null = null;
+
+  private readonly error = firebaseStatus.error ?? new Error('Firebase auth is not configured.');
+
+  async signUp(): Promise<User> {
+    return Promise.reject(this.error);
+  }
+
+  async signIn(): Promise<User> {
+    return Promise.reject(this.error);
+  }
+
+  async signInWithGoogle(): Promise<User> {
+    return Promise.reject(this.error);
+  }
+
+  async signOut(): Promise<void> {
+    return Promise.reject(this.error);
+  }
+
+  getCurrentUser(): User | null {
+    return null;
+  }
+
+  onAuthStateChange(callback: (user: User | null) => void) {
+    callback(null);
+    return () => undefined;
   }
 }
 
 // Create and export a single instance of the auth service
-export const authService = new FirebaseAuthService();
+export const authService: AuthService = auth
+  ? new FirebaseAuthService(auth)
+  : new DisabledAuthService();

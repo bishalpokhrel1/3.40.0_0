@@ -1,51 +1,70 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithCustomToken } from 'firebase/auth';
-import { firebaseConfig } from '../config/firebaseConfig';
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+console.log('Background script loaded');
 
 // Listen for installation
-chrome.runtime.onInstalled.addListener(async () => {
+chrome.runtime.onInstalled.addListener(() => {
   console.log('Extension installed');
-  try {
-    await setupSidePanel();
-  } catch (error) {
-    console.error('Error setting up side panel:', error);
-  }
+  
+  // Initialize storage with default values
+  const defaultSettings = {
+    tasksEnabled: true,
+    weatherEnabled: true,
+    newsEnabled: true,
+    theme: 'light',
+    notifications: true
+  };
+  
+  chrome.storage.sync.get(defaultSettings, (settings) => {
+    console.log('Settings initialized:', settings);
+  });
 });
 
-// Handle side panel
-async function setupSidePanel() {
-  if ('sidePanel' in chrome) {
-    await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
-  }
+// Listen for side panel toggle action
+if (chrome.action && chrome.action.onClicked) {
+  chrome.action.onClicked.addListener((tab) => {
+    console.log('Extension icon clicked');
+    try {
+      chrome.sidePanel.open({ windowId: tab.windowId });
+    } catch (error) {
+      console.error('Error opening side panel:', error);
+    }
+  });
+} else {
+  console.warn('chrome.action is not available');
 }
 
-// Handle extension icon click
-chrome.action.onClicked.addListener((tab) => {
-  if ('sidePanel' in chrome) {
-    chrome.sidePanel.open({ windowId: tab.windowId });
-  }
-});
-
-// Handle messages
+// Message handling
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('Received message:', message);
+  console.log('Message received:', message);
   
-  if (message.type === 'AUTH_STATE_CHANGED') {
-    sendResponse({ success: true });
+  if (message.type === 'GET_AUTH_TOKEN') {
+    if (chrome.identity && chrome.identity.getAuthToken) {
+      chrome.identity.getAuthToken({ interactive: true }, function(token) {
+        sendResponse({ token: token });
+      });
+      return true; // Will respond asynchronously
+    } else {
+      sendResponse({ error: 'Identity API not available' });
+    }
+  }
+  
+  if (message.type === 'GET_SETTINGS') {
+    const defaultSettings = {
+      tasksEnabled: true,
+      weatherEnabled: true,
+      newsEnabled: true,
+      theme: 'light',
+      notifications: true
+    };
+    
+    chrome.storage.sync.get(defaultSettings, (settings) => {
+      sendResponse(settings);
+    });
     return true;
   }
-
-  if (message.type === 'GET_AUTH_TOKEN') {
-    chrome.identity.getAuthToken({ interactive: true }, async (token) => {
-      if (chrome.runtime.lastError) {
-        sendResponse({ error: chrome.runtime.lastError });
-      } else {
-        sendResponse({ token });
-      }
+  
+  if (message.type === 'SAVE_SETTINGS') {
+    chrome.storage.sync.set(message.settings, () => {
+      sendResponse({ success: true });
     });
     return true;
   }

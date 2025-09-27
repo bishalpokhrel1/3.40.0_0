@@ -9,51 +9,34 @@ export default defineConfig({
     rollupOptions: {
       input: {
         newtab: resolve(__dirname, 'newtab.html'),
+        sidepanel: resolve(__dirname, 'sidepanel.html'),
         background: resolve(__dirname, 'src/background/background.ts'),
-        content: resolve(__dirname, 'src/content/contentScript.ts'),
-        sidepanel: resolve(__dirname, 'sidepanel.html')
+        contentScript: resolve(__dirname, 'src/content/contentScript.ts')
       },
       output: {
-        format: 'es',
         entryFileNames: (chunkInfo) => {
-          if (chunkInfo.name === 'background' || chunkInfo.name === 'content') {
-            return '[name].js';
-          }
-          return 'assets/[name]-[hash].js';
+          if (chunkInfo.name === 'background') return 'background.js';
+          if (chunkInfo.name === 'contentScript') return 'contentScript.js';
+          return '[name].js';
         },
         chunkFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: (assetInfo) => {
-          if (assetInfo.name === 'manifest.json') {
-            return 'manifest.json';
-          }
-          return 'assets/[name]-[hash].[ext]';
-        },
-        manualChunks: (id) => {
-          if (id.includes('node_modules')) {
-            if (id.includes('firebase')) {
-              return 'firebase';
-            }
-            return 'vendor';
-          }
+        assetFileNames: 'assets/[name]-[hash].[ext]'
+      },
+      external: (id) => {
+        // Don't bundle these for background script
+        if (id.includes('firebase') || id.includes('zustand')) {
+          return false;
         }
+        return false;
       }
     },
     modulePreload: false,
     cssCodeSplit: false,
-    sourcemap: true,
-    target: 'esnext',
+    sourcemap: false,
     minify: false
-  },
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src')
-    }
   },
   server: {
     port: 3000,
     open: false
-  },
-  optimizeDeps: {
-    exclude: ['firebase', '@firebase/app']
   }
 });

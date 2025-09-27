@@ -7,6 +7,7 @@ import SettingsPanel from '@/components/SettingsPanel'
 import NotesOverview from '@/components/NotesOverview'
 import AISuggestions from '@/components/AISuggestions'
 import Clock from '@/components/Clock'
+import LandingPage from '@/components/LandingPage'
 import { Settings } from 'lucide-react'
 
 /**
@@ -14,13 +15,14 @@ import { Settings } from 'lucide-react'
  * Loads user data and displays the dashboard
  */
 function App() {
-  const { 
-    showSettings, 
-    setShowSettings,
-    initializeApp 
+  const {
+    initializeApp,
+    isAuthenticated,
+    authLoading,
+    hasCompletedOnboarding
   } = useAppStore()
-  
   const [isLoading, setIsLoading] = useState(true)
+  const [showSettings, setShowSettings] = useState(false)
 
   useEffect(() => {
     const init = async () => {
@@ -35,7 +37,7 @@ function App() {
     init()
   }, [initializeApp])
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-800 via-purple-800 to-indigo-900">
         <motion.div
@@ -50,6 +52,10 @@ function App() {
         </motion.div>
       </div>
     )
+  }
+
+  if (!isAuthenticated && !hasCompletedOnboarding) {
+    return <LandingPage />
   }
 
   return (

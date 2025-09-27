@@ -1,8 +1,8 @@
-import { auth, db } from './firebaseConfig';
+import { auth, db, firebaseStatus } from './firebaseConfig';
 import { collection, getDocs, query, limit } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 
-interface ConnectionTestResult {
+export interface ConnectionTestResult {
   auth: {
     status: 'connected' | 'error';
     user: 'signed-in' | 'signed-out' | null;
@@ -27,10 +27,27 @@ export async function testFirebaseConnection(): Promise<ConnectionTestResult> {
     timestamp: new Date().toISOString()
   };
 
+  if (!firebaseStatus.ready || !auth || !db) {
+    const errorMessage = firebaseStatus.error?.message ?? 'Firebase is not configured.';
+    result.auth = {
+      status: 'error',
+      user: null,
+      error: errorMessage
+    };
+    result.firestore = {
+      status: 'error',
+      error: errorMessage
+    };
+    return result;
+  }
+
+  const authInstance = auth!;
+  const dbInstance = db!;
+
   try {
     // Test Firebase Auth
     await new Promise<void>((resolve) => {
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
+  const unsubscribe = onAuthStateChanged(authInstance, (user) => {
         unsubscribe();
         result.auth = {
           status: 'connected',
@@ -53,7 +70,7 @@ export async function testFirebaseConnection(): Promise<ConnectionTestResult> {
 
     // Test Firestore
     try {
-      const testQuery = query(collection(db, 'tasks'), limit(1));
+  const testQuery = query(collection(dbInstance, 'tasks'), limit(1));
       await getDocs(testQuery);
       result.firestore = {
         status: 'connected'
