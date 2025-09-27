@@ -1,20 +1,18 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
-
-// Firebase configuration
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
-};
+import { 
+  getAuth, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut, 
+  GoogleAuthProvider, 
+  signInWithCredential,
+  User 
+} from 'firebase/auth';
+import { firebaseConfig } from '../config/firebaseConfig';
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
 
 export interface AuthResponse {
   user: User | null;
@@ -42,11 +40,29 @@ export const firebaseService = {
     }
   },
 
-  // Sign in with Google
+  // Sign in with Google using Chrome Identity API
   async signInWithGoogle(): Promise<AuthResponse> {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      return { user: result.user };
+      return new Promise((resolve) => {
+        chrome.identity.getAuthToken({ interactive: true }, async (token) => {
+          if (chrome.runtime.lastError) {
+            resolve({ user: null, error: chrome.runtime.lastError.message });
+            return;
+          }
+
+          try {
+            if (typeof token === 'string') {
+              const credential = GoogleAuthProvider.credential(null, token);
+              const result = await signInWithCredential(auth, credential);
+              resolve({ user: result.user });
+            } else {
+              resolve({ user: null, error: 'Invalid token received' });
+            }
+          } catch (error: any) {
+            resolve({ user: null, error: error.message });
+          }
+        });
+      });
     } catch (error: any) {
       return { user: null, error: error.message };
     }

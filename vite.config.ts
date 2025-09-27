@@ -8,10 +8,10 @@ export default defineConfig({
     outDir: 'dist',
     rollupOptions: {
       input: {
-        newtab: resolve(__dirname, 'src/newtab/main.tsx'),
+        newtab: resolve(__dirname, 'newtab.html'),
         background: resolve(__dirname, 'src/background/background.ts'),
         content: resolve(__dirname, 'src/content/contentScript.ts'),
-        sidepanel: resolve(__dirname, 'src/sidepanel/main.tsx')
+        sidepanel: resolve(__dirname, 'sidepanel.html')
       },
       output: {
         format: 'es',
@@ -22,15 +22,27 @@ export default defineConfig({
           return 'assets/[name]-[hash].js';
         },
         chunkFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]'
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name === 'manifest.json') {
+            return 'manifest.json';
+          }
+          return 'assets/[name]-[hash].[ext]';
+        },
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('firebase')) {
+              return 'firebase';
+            }
+            return 'vendor';
+          }
+        }
       }
     },
-    modulePreload: {
-      polyfill: false
-    },
+    modulePreload: false,
     cssCodeSplit: false,
     sourcemap: true,
-    target: 'esnext'
+    target: 'esnext',
+    minify: false
   },
   resolve: {
     alias: {
