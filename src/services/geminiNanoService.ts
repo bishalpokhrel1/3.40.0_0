@@ -1,7 +1,8 @@
 import { create } from 'zustand';
-import type { 
+import { 
   AIModelStatus,
-  LanguageModelSession
+  LanguageModelSession,
+  type Message
 } from './nanoAIService';
 
 interface GeminiNanoState {
@@ -24,21 +25,69 @@ export const useGeminiNano = create<GeminiNanoState>((set, get) => ({
   error: null,
 
   checkAvailability: async () => {
-    // Hackathon-ready: disable real availability checks
-    return 'unavailable';
+    try {
+      // In a real implementation, we would check model availability here
+      set({ isAvailable: true });
+      return AIModelStatus.READY;
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : 'Unknown error', isAvailable: false });
+      return AIModelStatus.ERROR;
+    }
   },
 
   initializeModel: async () => {
-    // No-op in hackathon placeholder mode
-    return;
+    try {
+      set({ isDownloading: true, downloadProgress: 0 });
+      // Simulate initialization
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      set({ 
+        isDownloading: false,
+        downloadProgress: 100,
+        currentSession: {
+          messages: [],
+          status: AIModelStatus.READY,
+          error: null
+        }
+      });
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        isDownloading: false,
+        currentSession: null
+      });
+    }
   },
 
   generateResponse: async (prompt: string) => {
-    // Return placeholder
-    return `AI placeholder: ${prompt.slice(0, 160)}...`;
+    try {
+      const session = get().currentSession;
+      if (!session) {
+        throw new Error('Session not initialized');
+      }
+      
+      // In a real implementation, we would send the prompt to the model here
+      const response = `AI response to: ${prompt.slice(0, 160)}...`;
+      
+      session.messages.push(
+        { role: 'user', content: prompt },
+        { role: 'assistant', content: response }
+      );
+      
+      set({ currentSession: { ...session } });
+      return response;
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : 'Unknown error' });
+      return 'Error generating response';
+    }
   },
 
   cleanup: () => {
-    set({ currentSession: null });
+    set({ 
+      currentSession: null,
+      isAvailable: false,
+      isDownloading: false,
+      downloadProgress: 0,
+      error: null
+    });
   }
 }));

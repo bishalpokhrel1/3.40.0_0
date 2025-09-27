@@ -7,7 +7,8 @@
     "storage",
     "identity",
     "activeTab",
-    "scripting"
+    "scripting",
+    "sidePanel"
   ],
   "host_permissions": [
     "https://*.firebaseapp.com/*",
@@ -21,17 +22,16 @@
     ]
   },
   "action": {
-    "default_popup": "src/newtab/index.html",
     "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
-      "128": "icons/icon128.png"
+      "16": "public/icons/icon16.png",
+      "48": "public/icons/icon48.png",
+      "128": "public/icons/icon128.png"
     }
   },
   "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
+    "16": "public/icons/icon16.png",
+    "48": "public/icons/icon48.png",
+    "128": "public/icons/icon128.png"
   },
   "background": {
     "service_worker": "background.js",
@@ -40,12 +40,15 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["src/content/contentScript.ts"]
+      "js": ["content.js"]
     }
   ],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
   "web_accessible_resources": [
     {
-      "resources": ["icons/*"],
+      "resources": ["public/icons/*", "assets/*"],
       "matches": ["<all_urls>"]
     }
   ],

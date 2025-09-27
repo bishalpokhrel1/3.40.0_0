@@ -8,23 +8,40 @@ export default defineConfig({
     outDir: 'dist',
     rollupOptions: {
       input: {
-        newtab: resolve(__dirname, 'src/newtab/index.html'),
+        newtab: resolve(__dirname, 'src/newtab/main.tsx'),
         background: resolve(__dirname, 'src/background/background.ts'),
         content: resolve(__dirname, 'src/content/contentScript.ts'),
-        sidepanel: resolve(__dirname, 'src/sidepanel/index.html')
+        sidepanel: resolve(__dirname, 'src/sidepanel/main.tsx')
       },
       output: {
-        entryFileNames: '[name].js',
-        chunkFileNames: 'chunks/[name].[hash].js',
-        assetFileNames: 'assets/[name].[hash].[ext]'
+        format: 'es',
+        entryFileNames: (chunkInfo) => {
+          if (chunkInfo.name === 'background' || chunkInfo.name === 'content') {
+            return '[name].js';
+          }
+          return 'assets/[name]-[hash].js';
+        },
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     },
-    modulePreload: false,
+    modulePreload: {
+      polyfill: false
+    },
     cssCodeSplit: false,
-    sourcemap: true
+    sourcemap: true,
+    target: 'esnext'
+  },
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src')
+    }
   },
   server: {
     port: 3000,
     open: false
+  },
+  optimizeDeps: {
+    exclude: ['firebase', '@firebase/app']
   }
 });
