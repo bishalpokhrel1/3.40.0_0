@@ -138,9 +138,9 @@ const TaskPanel = () => {
   }, [tasks]);
 
   // Disabled state
-  if (!userPreferences.tasksEnabled) {
+  if (!userPreferences?.dashboardLayout?.showTasks) {
     return (
-      <div className="glass-card p-6 text-center">
+      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center">
         <h2 className="text-xl font-semibold text-white mb-2">Tasks Disabled</h2>
         <p className="text-white/70">Enable tasks in settings to manage your to-do list.</p>
       </div>
@@ -148,7 +148,7 @@ const TaskPanel = () => {
   }
 
   return (
-    <div className="glass-card card-padding h-full flex flex-col">
+    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 h-full flex flex-col">
       {/* Header with View Toggle */}
       <div className="flex flex-col space-y-4 mb-6">
         <div className="flex items-center justify-between">

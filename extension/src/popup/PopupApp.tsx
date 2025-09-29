@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ListTodo, FileText, PanelRight, Settings, Sparkles } from 'lucide-react';
-import { useAppStore } from '../store/appStore';
 
 interface Task {
   id: string;
@@ -21,10 +20,6 @@ const PopupApp: React.FC = () => {
   const [recentTasks, setRecentTasks] = useState<Task[]>([]);
   const [recentNotes, setRecentNotes] = useState<Note[]>([]);
   const [activeTab, setActiveTab] = useState<'tasks' | 'notes'>('tasks');
-  const { isAuthenticated, hasCompletedOnboarding } = useAppStore((state) => ({
-    isAuthenticated: state.isAuthenticated,
-    hasCompletedOnboarding: state.hasCompletedOnboarding
-  }));
 
   useEffect(() => {
     loadRecentItems();
@@ -80,23 +75,6 @@ const PopupApp: React.FC = () => {
           </button>
         </div>
       </div>
-      {!isAuthenticated && !hasCompletedOnboarding && (
-        <div className="mx-4 mt-3 rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white/80 flex items-start gap-3">
-          <Sparkles className="mt-0.5 h-4 w-4 text-indigo-200" />
-          <div>
-            <p className="font-medium text-white">Meet Manage</p>
-            <p className="text-white/70 mt-1">
-              Preview the full landing experience, connect Firebase, and unlock AI-powered sync before diving into the dashboard.
-            </p>
-            <button
-              onClick={openDashboard}
-              className="mt-3 inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 text-xs uppercase tracking-wide hover:bg-white/20"
-            >
-              Open getting-started view
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Tabs */}
       <div className="flex border-b border-white/10">
